@@ -1,0 +1,2 @@
+[install.scopes]
+"@oreforge" = { url = "https://npm.pkg.github.com", token = "$BUN_AUTH_TOKEN" }
