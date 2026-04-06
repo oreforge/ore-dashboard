@@ -1,7 +1,9 @@
 FROM oven/bun:1 AS build
 WORKDIR /app
-COPY package.json bun.lock ./
-RUN bun install --frozen-lockfile
+COPY package.json bun.lock .npmrc ./
+RUN --mount=type=secret,id=GITHUB_TOKEN \
+    echo "//npm.pkg.github.com/:_authToken=$(cat /run/secrets/GITHUB_TOKEN)" >> .npmrc && \
+    bun install --frozen-lockfile
 COPY . .
 RUN bun run build
 
