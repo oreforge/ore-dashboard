@@ -1,7 +1,8 @@
 {
   "$schema": "https://biomejs.dev/schemas/2.4.10/schema.json",
   "files": {
-    "includes": ["app/**", "server/**", "*.ts", "*.json"]
+    "includes": ["app/**", "server/**", "*.ts", "*.json"],
+    "ignores": ["app/components/ui/**"]
   },
   "vcs": {
     "enabled": true,
