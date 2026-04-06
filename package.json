@@ -14,7 +14,7 @@
     "format": "biome format --fix ."
   },
   "dependencies": {
-    "@oreforge/sdk": "../ore-sdk-ts",
+    "@oreforge/sdk": "0.0.2",
     "@xterm/addon-fit": "^0.11.0",
     "@xterm/xterm": "^6.0.0",
     "nuxt": "^4.4.2",
