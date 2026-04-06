@@ -8,6 +8,9 @@ export default defineNuxtConfig({
   runtimeConfig: {
     oreApiUrl: 'http://localhost:8080',
     oreToken: '',
+    public: {
+      oreApiUrl: 'http://localhost:8080',
+    },
   },
 
   css: ['~/assets/css/tailwind.css'],

@@ -9,5 +9,5 @@ useHead({ htmlAttrs: { class: 'dark' } })
       <NuxtPage />
     </NuxtLayout>
   </TooltipProvider>
-  <Toaster rich-colors position="bottom-right" />
+  <Toaster rich-colors theme="dark" position="bottom-right" />
 </template>

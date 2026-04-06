@@ -12,4 +12,5 @@ COPY --from=build /app/.output .output
 ENTRYPOINT ["sh", "-c", "\
   NUXT_ORE_API_URL=${NUXT_ORE_API_URL:-$ORE_API_URL} \
   NUXT_ORE_TOKEN=${NUXT_ORE_TOKEN:-$ORE_TOKEN} \
+  NUXT_PUBLIC_ORE_API_URL=${NUXT_PUBLIC_ORE_API_URL:-${NUXT_ORE_API_URL:-$ORE_API_URL}} \
   exec node .output/server/index.mjs"]
