@@ -1,8 +1,8 @@
-// https://nuxt.com/docs/api/configuration/nuxt-config
 import tailwindcss from '@tailwindcss/vite'
 
 export default defineNuxtConfig({
   compatibilityDate: '2026-04-06',
+  ssr: false,
   devtools: { enabled: true },
 
   runtimeConfig: {
@@ -14,12 +14,31 @@ export default defineNuxtConfig({
 
   vite: {
     plugins: [tailwindcss()],
+    optimizeDeps: {
+      include: [
+        '@vue/devtools-core',
+        '@vue/devtools-kit',
+        '@vueuse/core',
+        'lucide-vue-next',
+        'vue-sonner',
+        'reka-ui',
+        'clsx',
+        'tailwind-merge',
+        'class-variance-authority',
+        '@oreforge/sdk',
+        '@xterm/addon-fit',
+        '@xterm/xterm',
+      ],
+    },
   },
 
   nitro: {
     experimental: {
       websocket: true,
     },
+  },
+  imports: {
+    dirs: ['types'],
   },
   modules: ['shadcn-nuxt'],
   shadcn: {

@@ -1,6 +1,13 @@
+<script setup lang="ts">
+useHead({ htmlAttrs: { class: 'dark' } })
+</script>
+
 <template>
   <NuxtRouteAnnouncer />
-  <NuxtLayout>
-    <NuxtPage />
-  </NuxtLayout>
+  <TooltipProvider>
+    <NuxtLayout>
+      <NuxtPage />
+    </NuxtLayout>
+  </TooltipProvider>
+  <Toaster rich-colors position="bottom-right" />
 </template>

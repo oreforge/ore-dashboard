@@ -1,29 +1,39 @@
-import { Terminal } from '@xterm/xterm'
+import type { Console as OreConsoleType } from '@oreforge/sdk'
 import { FitAddon } from '@xterm/addon-fit'
+import { Terminal } from '@xterm/xterm'
 
-export function useConsole(projectName: MaybeRef<string>, containerName: MaybeRef<string>) {
+function resolveColor(el: HTMLElement): string {
+  const ctx = document.createElement('canvas').getContext('2d')
+  if (!ctx) return ''
+  ctx.fillStyle = getComputedStyle(el).backgroundColor
+  return ctx.fillStyle
+}
+
+export function useConsole(projectName: MaybeRef<string>, serverName: MaybeRef<string>) {
   const terminalRef = ref<HTMLElement | null>(null)
   const connected = ref(false)
   const error = ref<string | null>(null)
 
   let terminal: Terminal | null = null
   let fitAddon: FitAddon | null = null
-  let oreConsole: ReturnType<ReturnType<typeof useOreClient>['projects']['get']>['console'] extends (
-    opts: infer _O,
-  ) => infer R
-    ? R
-    : never
-  let resizeObserver: ResizeObserver | null = null
+  let oreConsole: OreConsoleType | null = null
+  function fit() {
+    fitAddon?.fit()
+  }
 
   function connect() {
     if (!terminalRef.value) return
     disconnect()
 
+    const bg = resolveColor(terminalRef.value)
+
     terminal = new Terminal({
       cursorBlink: true,
-      theme: { background: '#09090b', foreground: '#fafafa' },
-      fontFamily: 'monospace',
+      fontFamily: '"JetBrains Mono", monospace',
       fontSize: 14,
+      scrollback: 1000,
+      overviewRuler: { width: 0 },
+      theme: { background: bg },
     })
     fitAddon = new FitAddon()
     terminal.loadAddon(fitAddon)
@@ -31,53 +41,47 @@ export function useConsole(projectName: MaybeRef<string>, containerName: MaybeRe
     fitAddon.fit()
 
     const client = useOreClient()
-    const consolInstance = client.projects.get(toValue(projectName)).console({
-      container: toValue(containerName),
+    oreConsole = client.projects.get(toValue(projectName)).console({
+      server: toValue(serverName),
       cols: terminal.cols,
       rows: terminal.rows,
     })
-    oreConsole = consolInstance as typeof oreConsole
 
-    consolInstance.onData((data: Uint8Array) => terminal!.write(data))
-    consolInstance.onClose(() => {
+    terminal.onResize(({ cols, rows }) => {
+      oreConsole?.resize(cols, rows)
+    })
+
+    oreConsole.onData((data) => {
+      connected.value = true
+      terminal?.write(data)
+    })
+    oreConsole.onClose(() => {
       connected.value = false
     })
-    consolInstance.onError((e: Error) => {
+    oreConsole.onError((e) => {
       error.value = e.message
       connected.value = false
     })
 
-    terminal.onData((data: string) => {
-      consolInstance.write(new TextEncoder().encode(data))
+    queueMicrotask(() => {
+      terminal?.onData((data) => oreConsole?.write(new TextEncoder().encode(data)))
     })
 
-    resizeObserver = new ResizeObserver(() => {
-      if (fitAddon && terminal) {
-        fitAddon.fit()
-        consolInstance.resize(terminal.cols, terminal.rows)
-      }
-    })
-    resizeObserver.observe(terminalRef.value)
-
-    connected.value = true
-    error.value = null
+    window.addEventListener('resize', fit)
   }
 
   function disconnect() {
-    resizeObserver?.disconnect()
-    resizeObserver = null
-    if (oreConsole) {
-      try {
-        ;(oreConsole as { close: () => void }).close()
-      } catch {}
-    }
+    window.removeEventListener('resize', fit)
+    oreConsole?.close()
+    oreConsole = null
     terminal?.dispose()
     terminal = null
     fitAddon = null
     connected.value = false
+    error.value = null
   }
 
   onUnmounted(disconnect)
 
-  return { terminalRef, connected, error, connect, disconnect }
+  return { terminalRef, connected, error, connect, disconnect, fit }
 }

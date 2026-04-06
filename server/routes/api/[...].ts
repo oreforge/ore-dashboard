@@ -1,4 +1,7 @@
-const upstreams = new Map<unknown, { ws: WebSocket; pending: (string | ArrayBuffer)[] }>()
+const upstreams = new Map<
+  unknown,
+  { ws: WebSocket; pending: { data: string | ArrayBuffer; binary: boolean }[] }
+>()
 
 export default defineEventHandler({
   handler: (event) => {
@@ -24,7 +27,7 @@ export default defineEventHandler({
 
       upstream.onopen = () => {
         const ctx = upstreams.get(peer)
-        for (const m of ctx?.pending ?? []) upstream.send(m)
+        for (const m of ctx?.pending ?? []) upstream.send(m.data)
         if (ctx) ctx.pending = []
       }
       upstream.onmessage = (e) => {
@@ -42,14 +45,26 @@ export default defineEventHandler({
           peer.close()
         } catch {}
       }
+
+      const rawWs = (peer as unknown as { _internal: { ws: { on: (...args: never) => unknown } } })
+        ._internal?.ws
+      if (rawWs) {
+        rawWs.on('message', (data: Buffer, isBinary: boolean) => {
+          const ctx = upstreams.get(peer)
+          if (!ctx) return
+          const payload = isBinary
+            ? data.buffer.slice(data.byteOffset, data.byteOffset + data.byteLength)
+            : data.toString('utf-8')
+          if (ctx.ws.readyState === WebSocket.OPEN) {
+            ctx.ws.send(payload)
+          } else {
+            ctx.pending.push({ data: payload, binary: isBinary })
+          }
+        })
+      }
     },
 
-    message(peer, msg) {
-      const ctx = upstreams.get(peer)
-      if (!ctx) return
-      const data = msg.rawData as string | ArrayBuffer
-      ctx.ws.readyState === WebSocket.OPEN ? ctx.ws.send(data) : ctx.pending.push(data)
-    },
+    message() {},
 
     close(peer) {
       upstreams.get(peer)?.ws.close()
