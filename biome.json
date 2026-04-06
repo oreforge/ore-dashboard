@@ -1,14 +1,7 @@
 {
   "$schema": "https://biomejs.dev/schemas/2.4.10/schema.json",
   "files": {
-    "includes": [
-      "**/*.ts",
-      "**/*.vue",
-      "**/*.json",
-      "!!**/.nuxt",
-      "!!**/.output",
-      "!!**/node_modules"
-    ]
+    "includes": ["app/**", "server/**", "*.ts", "*.json"]
   },
   "vcs": {
     "enabled": true,

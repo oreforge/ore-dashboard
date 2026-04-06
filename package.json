@@ -8,6 +8,7 @@
     "generate": "nuxt generate",
     "preview": "nuxt preview",
     "postinstall": "nuxt prepare",
+    "check": "biome check --fix --unsafe .",
     "lint": "biome check .",
     "lint:fix": "biome check --fix .",
     "format": "biome format --fix ."
