@@ -48,11 +48,25 @@ function formatUptime(secs: number) {
   return `${secs}s`
 }
 
-function formatMemory(bytes: number) {
+function formatBytes(bytes: number) {
   if (!bytes) return '—'
   const mb = bytes / (1024 * 1024)
   if (mb >= 1024) return `${(mb / 1024).toFixed(1)} GB`
   return `${mb.toFixed(0)} MB`
+}
+
+function formatMemory(mem: { used_bytes: number; limit_bytes: number; percent: number }) {
+  if (!mem.limit_bytes && !mem.used_bytes) return '—'
+  const used = formatBytes(mem.used_bytes)
+  if (!mem.limit_bytes) return used
+  const limit = formatBytes(mem.limit_bytes)
+  return `${used} / ${limit}`
+}
+
+function formatCpu(cpu: { limit: number; percent: number }) {
+  if (!cpu.limit && !cpu.percent) return '—'
+  if (cpu.percent > 0) return `${cpu.percent}%`
+  return `${cpu.limit} cores`
 }
 
 function formatPorts(ports?: { host_port: number; container_port: number; protocol: string }[]) {
@@ -161,10 +175,10 @@ function formatPorts(ports?: { host_port: number; container_port: number; protoc
                     {{ liveUptime(server.container.uptime) }}
                   </TableCell>
                   <TableCell class="tabular-nums text-muted-foreground">
-                    {{ formatMemory(server.container.memory_bytes) }}
+                    {{ formatMemory(server.container.resources.memory) }}
                   </TableCell>
                   <TableCell class="tabular-nums text-muted-foreground">
-                    {{ server.container.cpus || '—' }}
+                    {{ formatCpu(server.container.resources.cpu) }}
                   </TableCell>
                 </TableRow>
               </TableBody>
