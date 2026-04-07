@@ -1,4 +1,5 @@
 import { OreApiError, OreConnectionError } from '@oreforge/sdk'
+import { toast } from 'vue-sonner'
 import type { ProjectEntry } from '~/types/project'
 
 const projects = ref<ProjectEntry[]>([])
@@ -10,7 +11,8 @@ let subscribers = 0
 async function fetchProjects() {
   const client = useOreClient()
   try {
-    const { projects: names } = await client.projects.list()
+    const { projects: rawNames } = await client.projects.list()
+    const names = rawNames ?? []
     const entries = await Promise.allSettled(
       names.map(async (name) => {
         const status = await client.projects.get(name).status()
@@ -34,16 +36,20 @@ async function fetchProjects() {
     })
     error.value = null
   } catch (e) {
+    let msg: string
     if (e instanceof OreConnectionError) {
-      error.value = 'Unable to connect to the server'
+      msg = 'Unable to connect to the server'
     } else if (e instanceof OreApiError) {
-      error.value = e.detail
+      msg = e.detail
     } else {
-      error.value = e instanceof Error ? e.message : String(e)
+      msg = e instanceof Error ? e.message : String(e)
     }
-  } finally {
-    loading.value = false
+    if (error.value !== msg) toast.error(msg)
+    error.value = msg
+    if (projects.value.length > 0) loading.value = false
+    return
   }
+  loading.value = false
 }
 
 export function useProjects() {

@@ -92,9 +92,6 @@ function handleDown(e: Event) {
             </Button>
           </div>
         </div>
-        <Alert v-if="project.error" variant="destructive" class="mt-3 py-2">
-          <AlertDescription class="text-xs">{{ project.error }}</AlertDescription>
-        </Alert>
       </CardContent>
     </Card>
   </NuxtLink>

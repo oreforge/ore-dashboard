@@ -1,4 +1,4 @@
-import type { BuildOptions, CleanTarget, PruneTarget, UpOptions } from '~/types/project'
+import type { BuildRequest, CleanRequest, PruneRequest, UpRequest } from '@oreforge/sdk'
 
 const operationsMap = new Map<string, ReturnType<typeof createOperations>>()
 
@@ -36,7 +36,7 @@ function createOperations(projectName: string) {
     return ops.find((op) => op.lines.value.length > 0)
   })
 
-  function handleUp(opts?: UpOptions) {
+  function handleUp(opts?: UpRequest) {
     up.execute((signal) =>
       client.projects
         .get(projectName)
@@ -46,7 +46,7 @@ function createOperations(projectName: string) {
   function handleDown() {
     down.execute((signal) => client.projects.get(projectName).down({ signal }))
   }
-  function handleBuild(opts?: BuildOptions) {
+  function handleBuild(opts?: BuildRequest) {
     build.execute((signal) =>
       client.projects.get(projectName).build({ no_cache: opts?.no_cache }, { signal }),
     )
@@ -54,10 +54,10 @@ function createOperations(projectName: string) {
   function handleUpdate() {
     update.execute((signal) => client.projects.update(projectName, { signal }))
   }
-  function handlePrune(target: PruneTarget = 'all') {
+  function handlePrune(target: PruneRequest['target'] = 'all') {
     prune.execute((signal) => client.projects.get(projectName).prune({ target }, { signal }))
   }
-  function handleClean(target: CleanTarget = 'all') {
+  function handleClean(target: CleanRequest['target'] = 'all') {
     clean.execute((signal) => client.projects.get(projectName).clean({ target }, { signal }))
   }
 

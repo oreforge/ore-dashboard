@@ -5,10 +5,9 @@ import { ActivityIcon, HeartPulseIcon, NetworkIcon, ServerIcon } from 'lucide-vu
 const route = useRoute()
 const name = computed(() => route.params.name as string)
 
-const { status, loading, error, fetchedAt } = inject('projectStatus') as {
+const { status, loading, fetchedAt } = inject('projectStatus') as {
   status: Ref<NetworkStatus | null>
   loading: Ref<boolean>
-  error: Ref<string | null>
   fetchedAt: Ref<number>
 }
 
@@ -65,20 +64,21 @@ function formatPorts(ports?: { host_port: number; container_port: number; protoc
 <template>
   <div>
     <div class="mb-6">
-      <h1 class="text-2xl font-semibold tracking-tight">{{ name }}</h1>
-      <p v-if="status" class="mt-0.5 text-sm text-muted-foreground">{{ status.network }}</p>
+      <template v-if="loading">
+        <Skeleton class="h-8 w-40" />
+        <Skeleton class="mt-0.5 h-5 w-24" />
+      </template>
+      <template v-else>
+        <h1 class="text-2xl font-semibold tracking-tight">{{ name }}</h1>
+        <p v-if="status" class="mt-0.5 text-sm text-muted-foreground">{{ status.network }}</p>
+      </template>
     </div>
-
-    <Alert v-if="error" variant="destructive" class="mb-6">
-      <AlertTitle>Error</AlertTitle>
-      <AlertDescription>{{ error }}</AlertDescription>
-    </Alert>
 
     <div v-if="loading" class="mb-6 grid gap-4 md:grid-cols-2 lg:grid-cols-4">
       <Card v-for="i in 4" :key="i">
         <CardHeader>
-          <Skeleton class="h-4 w-20" />
-          <Skeleton class="h-8 w-12" />
+          <Skeleton class="h-5 w-16" />
+          <Skeleton class="h-9 w-10" />
         </CardHeader>
       </Card>
     </div>

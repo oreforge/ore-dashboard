@@ -50,9 +50,8 @@ const showAddDialog = ref(false)
         >
           <DropdownMenuLabel class="text-xs text-muted-foreground">Projects</DropdownMenuLabel>
           <template v-if="loading">
-            <div v-for="i in 3" :key="i" class="flex items-center gap-2 p-2">
-              <Skeleton class="size-6 rounded-sm" />
-              <Skeleton class="h-4 flex-1" />
+            <div v-for="i in 3" :key="i" class="p-2">
+              <Skeleton class="h-5 w-full" />
             </div>
           </template>
           <template v-else-if="projects.length === 0">

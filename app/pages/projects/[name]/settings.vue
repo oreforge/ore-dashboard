@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import type { WebhookInfoResponse } from '@oreforge/sdk'
+import { OreApiError } from '@oreforge/sdk'
 import { CopyIcon, Loader2Icon, WebhookIcon } from 'lucide-vue-next'
 import { toast } from 'vue-sonner'
 
@@ -7,42 +8,38 @@ const route = useRoute()
 const router = useRouter()
 const name = computed(() => route.params.name as string)
 const client = useOreClient()
-const { oreApiUrl } = useRuntimeConfig().public
 
 const webhook = ref<WebhookInfoResponse | null>(null)
 const webhookLoading = ref(true)
-const webhookError = ref<string | null>(null)
 const triggering = ref(false)
 
 const webhookUrl = computed(() => {
-  if (!webhook.value?.url) return ''
-  return `${oreApiUrl}${webhook.value.url}`
+  return webhook.value?.url ?? ''
 })
 
 async function fetchWebhook() {
   webhookLoading.value = true
-  webhookError.value = null
   try {
     webhook.value = await client.projects.get(name.value).webhookInfo()
   } catch (e) {
-    webhookError.value = e instanceof Error ? e.message : 'Failed to load webhook info'
+    toast.error(e instanceof Error ? e.message : 'Failed to load webhook info')
   } finally {
     webhookLoading.value = false
   }
 }
 
 async function triggerWebhook() {
-  if (!webhookUrl.value) return
+  if (!webhook.value?.secret) return
   triggering.value = true
   try {
-    const res = await fetch(webhookUrl.value, { method: 'POST' })
-    if (!res.ok) {
-      const body = (await res.json().catch(() => ({}))) as { detail?: string }
-      throw new Error(body.detail ?? res.statusText)
-    }
+    await client.webhook.trigger(name.value, { secret: webhook.value.secret })
     toast.success('Webhook triggered successfully')
   } catch (e) {
-    toast.error(e instanceof Error ? e.message : 'Failed to trigger webhook')
+    if (e instanceof OreApiError) {
+      toast.error(`HTTP ${e.status}: ${e.detail}`)
+    } else {
+      toast.error(e instanceof Error ? e.message : 'Failed to trigger webhook')
+    }
   } finally {
     triggering.value = false
   }
@@ -93,14 +90,11 @@ async function handleRemove() {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <div v-if="webhookLoading" class="space-y-3">
-            <Skeleton class="h-4 w-48" />
-            <Skeleton class="h-9 w-full" />
+          <div v-if="webhookLoading" class="flex gap-2">
+            <Skeleton class="h-9 flex-1" />
+            <Skeleton class="size-9 shrink-0" />
+            <Skeleton class="size-9 shrink-0" />
           </div>
-
-          <Alert v-else-if="webhookError" variant="destructive">
-            <AlertDescription class="text-xs">{{ webhookError }}</AlertDescription>
-          </Alert>
 
           <div v-else-if="webhook && !webhook.enabled" class="text-sm text-muted-foreground">
             Webhooks are not enabled for this project.

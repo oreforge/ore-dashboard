@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { PlusIcon, ServerIcon } from 'lucide-vue-next'
 
-const { projects, loading, error } = useProjects()
+const { projects, loading } = useProjects()
 const showAddDialog = ref(false)
 </script>
 
@@ -20,29 +20,23 @@ const showAddDialog = ref(false)
       </Button>
     </div>
 
-    <Alert v-if="error" variant="destructive" class="mb-6">
-      <AlertTitle>Failed to load projects</AlertTitle>
-      <AlertDescription>{{ error }}</AlertDescription>
-    </Alert>
-
     <div v-if="loading" class="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
       <Card v-for="i in 3" :key="i">
-        <CardHeader class="flex flex-row items-start gap-3 space-y-0">
-          <Skeleton class="size-10 rounded-lg" />
-          <div class="flex-1 space-y-2">
-            <Skeleton class="h-4 w-28" />
-            <Skeleton class="h-3 w-20" />
+        <CardHeader class="pb-3">
+          <div class="flex items-center justify-between">
+            <Skeleton class="h-5 w-28" />
+            <Skeleton class="h-5 w-16 rounded-full" />
           </div>
-          <Skeleton class="h-5 w-16 rounded-full" />
+          <Skeleton class="h-4 w-20" />
         </CardHeader>
-        <CardContent>
-          <Skeleton class="h-3.5 w-24" />
+        <CardContent class="pt-0">
+          <Skeleton class="h-4 w-32" />
         </CardContent>
       </Card>
     </div>
 
     <div
-      v-else-if="projects.length === 0 && !error"
+      v-else-if="projects.length === 0"
       class="flex flex-col items-center justify-center rounded-xl border border-dashed py-16"
     >
       <div class="flex size-14 items-center justify-center rounded-full bg-muted">

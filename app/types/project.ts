@@ -6,8 +6,3 @@ export interface ProjectEntry {
   loading: boolean
   error: string | null
 }
-
-export type UpOptions = { no_cache?: boolean; force?: boolean }
-export type BuildOptions = { no_cache?: boolean }
-export type PruneTarget = 'all' | 'servers' | 'images' | 'data'
-export type CleanTarget = 'all' | 'cache' | 'builds'

@@ -1,5 +1,6 @@
 import type { NetworkStatus } from '@oreforge/sdk'
 import { OreApiError, OreConnectionError } from '@oreforge/sdk'
+import { toast } from 'vue-sonner'
 
 export function useProjectStatus(name: MaybeRef<string>) {
   const client = useOreClient()
@@ -14,16 +15,19 @@ export function useProjectStatus(name: MaybeRef<string>) {
       status.value = await client.projects.get(toValue(name)).status()
       fetchedAt.value = Date.now()
       error.value = null
-    } catch (e) {
-      if (e instanceof OreConnectionError) {
-        error.value = 'Unable to reach the server. Check your connection.'
-      } else if (e instanceof OreApiError) {
-        error.value = e.detail
-      } else {
-        error.value = e instanceof Error ? e.message : String(e)
-      }
-    } finally {
       loading.value = false
+    } catch (e) {
+      let msg: string
+      if (e instanceof OreConnectionError) {
+        msg = 'Unable to reach the server. Check your connection.'
+      } else if (e instanceof OreApiError) {
+        msg = e.detail
+      } else {
+        msg = e instanceof Error ? e.message : String(e)
+      }
+      if (error.value !== msg) toast.error(msg)
+      error.value = msg
+      if (status.value) loading.value = false
     }
   }
 
