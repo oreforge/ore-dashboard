@@ -1,6 +1,8 @@
 <script setup lang="ts">
 import { useIntervalFn } from '@vueuse/core'
 import { ActivityIcon, HeartPulseIcon, NetworkIcon, PlayIcon, ServerIcon } from 'lucide-vue-next'
+import { createServerColumns } from '~/components/project/server-columns'
+import { createServiceColumns } from '~/components/project/service-columns'
 import { aggregateStateClass, getAggregateState } from '~/utils/status-colors'
 
 const route = useRoute()
@@ -32,6 +34,9 @@ function liveUptime(snapshotNs?: number) {
   const totalSecs = Math.floor(snapshotNs / 1_000_000_000) + Math.floor(elapsedMs / 1000)
   return formatUptime(totalSecs)
 }
+
+const serverColumns = createServerColumns(() => name.value, liveUptime)
+const serviceColumns = createServiceColumns(() => name.value, liveUptime)
 </script>
 
 <template>
@@ -69,7 +74,7 @@ function liveUptime(snapshotNs?: number) {
           </CardHeader>
         </Card>
       </div>
-      <Card class="overflow-hidden py-0">
+      <div class="rounded-md border">
         <Table>
           <TableHeader>
             <TableRow>
@@ -78,11 +83,11 @@ function liveUptime(snapshotNs?: number) {
           </TableHeader>
           <TableBody>
             <TableRow v-for="i in 3" :key="i">
-              <TableCell v-for="j in 6" :key="j"><Skeleton class="h-4 w-20" /></TableCell>
+              <TableCell v-for="j in 6" :key="j" class="h-12"><Skeleton class="h-4 w-20" /></TableCell>
             </TableRow>
           </TableBody>
         </Table>
-      </Card>
+      </div>
     </div>
 
     <div v-else-if="status" class="mb-6 grid gap-4 md:grid-cols-2 lg:grid-cols-4">
@@ -145,44 +150,15 @@ function liveUptime(snapshotNs?: number) {
             <ServerIcon class="size-3.5" /> Servers
             <span class="text-muted-foreground/60">({{ serverCount }})</span>
           </h2>
-          <Card class="overflow-hidden py-0">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Name</TableHead>
-                  <TableHead class="whitespace-nowrap">State</TableHead>
-                  <TableHead class="whitespace-nowrap">Health</TableHead>
-                  <TableHead>Image</TableHead>
-                  <TableHead>Ports</TableHead>
-                  <TableHead class="whitespace-nowrap">Uptime</TableHead>
-                  <TableHead class="whitespace-nowrap">Memory</TableHead>
-                  <TableHead class="whitespace-nowrap">CPUs</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                <TableRow v-for="server in status.servers" :key="server.name" class="hover:bg-muted/50">
-                  <TableCell class="truncate font-medium">{{ server.name }}</TableCell>
-                  <TableCell><ProjectStatusBadge :state="server.container.state" /></TableCell>
-                  <TableCell><ProjectHealthBadge :health="server.container.health" /></TableCell>
-                  <TableCell class="truncate font-mono text-xs text-muted-foreground">
-                    {{ server.container.image || '—' }}
-                  </TableCell>
-                  <TableCell class="truncate font-mono text-xs text-muted-foreground">
-                    {{ formatPorts(server.container.ports) }}
-                  </TableCell>
-                  <TableCell class="tabular-nums text-muted-foreground">
-                    {{ liveUptime(server.container.uptime) }}
-                  </TableCell>
-                  <TableCell class="tabular-nums text-muted-foreground">
-                    {{ formatMemory(server.container.resources.memory) }}
-                  </TableCell>
-                  <TableCell class="tabular-nums text-muted-foreground">
-                    {{ formatCpu(server.container.resources.cpu) }}
-                  </TableCell>
-                </TableRow>
-              </TableBody>
-            </Table>
-          </Card>
+          <ProjectDataTable
+            :columns="serverColumns"
+            :data="status.servers"
+            :get-row-id="(row: any) => row.name"
+          >
+            <template #toolbar="{ table }">
+              <ProjectContainerTableToolbar :table="table" :project-name="name" type="server" />
+            </template>
+          </ProjectDataTable>
         </div>
 
         <div v-if="status.services && status.services.length > 0">
@@ -190,36 +166,15 @@ function liveUptime(snapshotNs?: number) {
             <NetworkIcon class="size-3.5" /> Services
             <span class="text-muted-foreground/60">({{ serviceCount }})</span>
           </h2>
-          <Card class="overflow-hidden py-0">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Name</TableHead>
-                  <TableHead class="whitespace-nowrap">State</TableHead>
-                  <TableHead class="whitespace-nowrap">Health</TableHead>
-                  <TableHead>Image</TableHead>
-                  <TableHead>Ports</TableHead>
-                  <TableHead class="whitespace-nowrap">Uptime</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                <TableRow v-for="service in status.services" :key="service.name" class="hover:bg-muted/50">
-                  <TableCell class="truncate font-medium">{{ service.name }}</TableCell>
-                  <TableCell><ProjectStatusBadge :state="service.container.state" /></TableCell>
-                  <TableCell><ProjectHealthBadge :health="service.container.health" /></TableCell>
-                  <TableCell class="truncate font-mono text-xs text-muted-foreground">
-                    {{ service.container.image || '—' }}
-                  </TableCell>
-                  <TableCell class="truncate font-mono text-xs text-muted-foreground">
-                    {{ formatPorts(service.container.ports) }}
-                  </TableCell>
-                  <TableCell class="tabular-nums text-muted-foreground">
-                    {{ liveUptime(service.container.uptime) }}
-                  </TableCell>
-                </TableRow>
-              </TableBody>
-            </Table>
-          </Card>
+          <ProjectDataTable
+            :columns="serviceColumns"
+            :data="status.services ?? []"
+            :get-row-id="(row: any) => row.name"
+          >
+            <template #toolbar="{ table }">
+              <ProjectContainerTableToolbar :table="table" :project-name="name" type="service" />
+            </template>
+          </ProjectDataTable>
         </div>
       </div>
     </template>
