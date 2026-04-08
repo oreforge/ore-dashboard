@@ -5,7 +5,7 @@
     "": {
       "name": "ore-dashboard",
       "dependencies": {
-        "@oreforge/sdk": "0.1.1",
+        "@oreforge/sdk": "0.1.2",
         "@tanstack/vue-table": "^8.21.3",
         "@vueuse/core": "^14.2.1",
         "@xterm/addon-fit": "^0.11.0",
@@ -237,7 +237,7 @@
 
     "@nuxt/vite-builder": ["@nuxt/vite-builder@4.4.2", "", { "dependencies": { "@nuxt/kit": "4.4.2", "@rollup/plugin-replace": "^6.0.3", "@vitejs/plugin-vue": "^6.0.4", "@vitejs/plugin-vue-jsx": "^5.1.4", "autoprefixer": "^10.4.27", "consola": "^3.4.2", "cssnano": "^7.1.3", "defu": "^6.1.4", "escape-string-regexp": "^5.0.0", "exsolve": "^1.0.8", "get-port-please": "^3.2.0", "jiti": "^2.6.1", "knitwork": "^1.3.0", "magic-string": "^0.30.21", "mlly": "^1.8.1", "mocked-exports": "^0.1.1", "nypm": "^0.6.5", "pathe": "^2.0.3", "pkg-types": "^2.3.0", "postcss": "^8.5.8", "seroval": "^1.5.1", "std-env": "^4.0.0", "ufo": "^1.6.3", "unenv": "^2.0.0-rc.24", "vite": "^7.3.1", "vite-node": "^5.3.0", "vite-plugin-checker": "^0.12.0", "vue-bundle-renderer": "^2.2.0" }, "peerDependencies": { "@babel/plugin-proposal-decorators": "^7.25.0", "@babel/plugin-syntax-jsx": "^7.25.0", "nuxt": "4.4.2", "rolldown": "^1.0.0-beta.38", "rollup-plugin-visualizer": "^6.0.0 || ^7.0.1", "vue": "^3.3.4" }, "optionalPeers": ["@babel/plugin-proposal-decorators", "@babel/plugin-syntax-jsx", "rolldown", "rollup-plugin-visualizer"] }, "sha512-fJaIwMA8ID6BU5EqmoDvnhq4qYDJeWjdHk4jfqy8D3Nm7CoUW0BvX7Ee92XoO05rtUiClGlk/NQ1Ii8hs3ZIbw=="],
 
-    "@oreforge/sdk": ["@oreforge/sdk@0.1.1", "https://npm.pkg.github.com/download/@oreforge/sdk/0.1.1/79e3ca19e170754def37978b234a14207309eed5", {}, "sha512-78f3oGSGzm2iiDZ+z3PC6xghhRgHxBy01oku/MkFa1TaxCPv059Q3h+LGLa8qDByJlXA97pVAVNec81MNLUeqA=="],
+    "@oreforge/sdk": ["@oreforge/sdk@0.1.2", "https://npm.pkg.github.com/download/@oreforge/sdk/0.1.2/caf0f052a054ee7726ecdce1b16819b72c811e17", {}, "sha512-aVn8kAKCvQP9ydB4rZuaHELd0GH2R4p4MnH0u4KGarCJHcX9nOB9VTPvWlqCZW5amSQgLYLQwqMyxe0Qkc/S4g=="],
 
     "@oxc-minify/binding-android-arm-eabi": ["@oxc-minify/binding-android-arm-eabi@0.117.0", "", { "os": "android", "cpu": "arm" }, "sha512-5Hf2KsGRjxp3HnPU/mse7cQJa5tWfMFUPZQcgSMVsv2JZnGFFOIDzA0Oja2KDD+VPJqMpEJKc2dCHAGZgJxsGg=="],
 

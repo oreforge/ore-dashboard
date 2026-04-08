@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { Loader2Icon, PlayIcon, SquareIcon } from 'lucide-vue-next'
+import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import type { ProjectEntry } from '~/types/project'
 import { aggregateStateClass, aggregateStatusDot, getAggregateState } from '~/utils/status-colors'
 
@@ -18,6 +19,8 @@ const upOp = useStreamOperation()
 const downOp = useStreamOperation()
 const busy = computed(() => upOp.running.value || downOp.running.value)
 const client = useOreClient()
+const iconUrl = computed(() => client.projects.get(props.project.name).iconUrl)
+const initials = computed(() => props.project.name.slice(0, 2).toUpperCase())
 
 function handleUp(e: Event) {
   e.preventDefault()
@@ -38,6 +41,10 @@ function handleDown(e: Event) {
       <CardHeader class="pb-3">
         <div class="flex items-center justify-between">
           <div class="flex items-center gap-2 min-w-0">
+            <Avatar class="size-6 shrink-0">
+              <img :src="iconUrl" :alt="project.name" class="aspect-square size-full object-cover" @error="($event.target as HTMLImageElement).style.display = 'none'">
+              <AvatarFallback>{{ initials }}</AvatarFallback>
+            </Avatar>
             <span
               class="inline-block size-2 shrink-0 rounded-full"
               :class="aggregateStatusDot(project.status)"

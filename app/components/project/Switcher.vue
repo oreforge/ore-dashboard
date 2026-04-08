@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { ChevronsUpDownIcon, FolderOpenIcon, PlusIcon } from 'lucide-vue-next'
+import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import { useSidebar } from '~/components/ui/sidebar'
 import { aggregateStatusDot } from '~/utils/status-colors'
 
@@ -7,12 +8,21 @@ const { projects, loading } = useProjects()
 const route = useRoute()
 const router = useRouter()
 const { isMobile } = useSidebar()
+const client = useOreClient()
 
 const activeProject = computed(() => {
   const name = route.params.name as string | undefined
   if (!name) return null
   return projects.value.find((p) => p.name === name) ?? null
 })
+
+function projectIconUrl(name: string) {
+  return client.projects.get(name).iconUrl
+}
+
+function projectInitials(name: string) {
+  return name.slice(0, 2).toUpperCase()
+}
 
 function selectProject(name: string) {
   router.push(`/projects/${name}`)
@@ -30,7 +40,11 @@ const showAddDialog = ref(false)
             size="lg"
             class="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
           >
-            <ChevronsUpDownIcon class="hidden shrink-0 group-data-[collapsible=icon]:m-auto group-data-[collapsible=icon]:block" />
+            <Avatar v-if="activeProject" class="size-8 shrink-0 group-data-[collapsible=icon]:m-auto">
+              <img :src="projectIconUrl(activeProject.name)" :alt="activeProject.name" class="aspect-square size-full object-cover" @error="($event.target as HTMLImageElement).style.display = 'none'">
+              <AvatarFallback>{{ projectInitials(activeProject.name) }}</AvatarFallback>
+            </Avatar>
+            <ChevronsUpDownIcon v-else class="hidden shrink-0 group-data-[collapsible=icon]:m-auto group-data-[collapsible=icon]:block" />
             <div class="grid flex-1 text-left text-sm leading-tight group-data-[collapsible=icon]:hidden">
               <span class="truncate font-semibold">
                 {{ activeProject?.name ?? 'Select project' }}
@@ -64,6 +78,10 @@ const showAddDialog = ref(false)
               class="gap-2 p-2"
               @click="selectProject(project.name)"
             >
+              <Avatar class="size-5 shrink-0">
+                <img :src="projectIconUrl(project.name)" :alt="project.name" class="aspect-square size-full object-cover" @error="($event.target as HTMLImageElement).style.display = 'none'">
+                <AvatarFallback class="text-[10px]">{{ projectInitials(project.name) }}</AvatarFallback>
+              </Avatar>
               <span class="flex-1 truncate">{{ project.name }}</span>
               <span class="inline-block size-2 shrink-0 rounded-full" :class="aggregateStatusDot(project.status)" />
             </DropdownMenuItem>
