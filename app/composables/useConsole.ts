@@ -1,4 +1,4 @@
-import type { Console as OreConsoleType } from '@oreforge/sdk'
+import type { OreConsole } from '@oreforge/sdk'
 import { FitAddon } from '@xterm/addon-fit'
 import { Terminal } from '@xterm/xterm'
 
@@ -13,12 +13,13 @@ function resolveColor(el: HTMLElement): string {
 
 export function useConsole(projectName: MaybeRef<string>, serverName: MaybeRef<string>) {
   const terminalRef = ref<HTMLElement | null>(null)
+  const connecting = ref(false)
   const connected = ref(false)
   const error = ref<string | null>(null)
 
   let terminal: Terminal | null = null
   let fitAddon: FitAddon | null = null
-  let oreConsole: OreConsoleType | null = null
+  let oreConsole: OreConsole | null = null
   function fit() {
     fitAddon?.fit()
   }
@@ -26,6 +27,7 @@ export function useConsole(projectName: MaybeRef<string>, serverName: MaybeRef<s
   function connect() {
     if (!terminalRef.value) return
     disconnect()
+    connecting.value = true
 
     const bg = resolveColor(terminalRef.value)
 
@@ -54,14 +56,17 @@ export function useConsole(projectName: MaybeRef<string>, serverName: MaybeRef<s
     })
 
     oreConsole.onData((data) => {
+      connecting.value = false
       connected.value = true
       terminal?.write(data)
     })
     oreConsole.onClose(() => {
+      connecting.value = false
       connected.value = false
     })
     oreConsole.onError((e) => {
       error.value = e.message
+      connecting.value = false
       connected.value = false
     })
 
@@ -79,11 +84,12 @@ export function useConsole(projectName: MaybeRef<string>, serverName: MaybeRef<s
     terminal?.dispose()
     terminal = null
     fitAddon = null
+    connecting.value = false
     connected.value = false
     error.value = null
   }
 
   onUnmounted(disconnect)
 
-  return { terminalRef, connected, error, connect, disconnect, fit }
+  return { terminalRef, connecting, connected, error, connect, disconnect, fit }
 }

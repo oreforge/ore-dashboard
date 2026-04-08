@@ -61,26 +61,36 @@ function handleDown(e: Event) {
             <span v-if="serviceCount > 0">{{ serviceCount }} services</span>
           </div>
           <div class="flex gap-1">
-            <Button
-              size="icon"
-              variant="ghost"
-              class="size-7"
-              :disabled="busy"
-              @click="handleUp"
-            >
-              <Loader2Icon v-if="upOp.running.value" class="size-3.5 animate-spin" />
-              <PlayIcon v-else class="size-3.5" />
-            </Button>
-            <Button
-              size="icon"
-              variant="ghost"
-              class="size-7"
-              :disabled="busy"
-              @click="handleDown"
-            >
-              <Loader2Icon v-if="downOp.running.value" class="size-3.5 animate-spin" />
-              <SquareIcon v-else class="size-3.5" />
-            </Button>
+            <Tooltip>
+              <TooltipTrigger as-child>
+                <Button
+                  size="icon"
+                  variant="ghost"
+                  class="size-7"
+                  :disabled="busy"
+                  @click="handleUp"
+                >
+                  <Loader2Icon v-if="upOp.running.value" class="size-3.5 animate-spin" />
+                  <PlayIcon v-else class="size-3.5" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>Start</TooltipContent>
+            </Tooltip>
+            <Tooltip>
+              <TooltipTrigger as-child>
+                <Button
+                  size="icon"
+                  variant="ghost"
+                  class="size-7"
+                  :disabled="busy"
+                  @click="handleDown"
+                >
+                  <Loader2Icon v-if="downOp.running.value" class="size-3.5 animate-spin" />
+                  <SquareIcon v-else class="size-3.5" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>Stop</TooltipContent>
+            </Tooltip>
           </div>
         </div>
       </CardContent>

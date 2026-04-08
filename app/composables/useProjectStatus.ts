@@ -21,7 +21,7 @@ export function useProjectStatus(name: MaybeRef<string>) {
       if (e instanceof OreConnectionError) {
         msg = 'Unable to reach the server. Check your connection.'
       } else if (e instanceof OreApiError) {
-        msg = e.detail
+        msg = String(e.detail)
       } else {
         msg = e instanceof Error ? e.message : String(e)
       }

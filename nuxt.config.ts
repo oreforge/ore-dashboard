@@ -1,6 +1,10 @@
 import tailwindcss from '@tailwindcss/vite'
+import pkg from './package.json'
 
 export default defineNuxtConfig({
+  appConfig: {
+    version: pkg.version,
+  },
   compatibilityDate: '2026-04-06',
   ssr: false,
   devtools: { enabled: true },

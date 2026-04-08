@@ -1,3 +1,7 @@
+<script setup lang="ts">
+const { version } = useAppConfig()
+</script>
+
 <template>
   <Sidebar collapsible="icon">
     <SidebarHeader>
@@ -7,6 +11,12 @@
     <SidebarContent>
       <ShellNavMain />
     </SidebarContent>
+
+    <SidebarFooter>
+      <div class="px-2 py-1 text-[11px] text-muted-foreground/60 group-data-[collapsible=icon]:hidden">
+        OreForge v{{ version }}
+      </div>
+    </SidebarFooter>
 
     <SidebarRail />
   </Sidebar>

@@ -33,17 +33,23 @@ export default defineEventHandler({
       upstream.onmessage = (e) => {
         try {
           peer.send(e.data instanceof ArrayBuffer ? new Uint8Array(e.data) : e.data)
-        } catch {}
+        } catch (_) {
+          void _
+        }
       }
       upstream.onclose = () => {
         try {
           peer.close()
-        } catch {}
+        } catch (_) {
+          void _
+        }
       }
       upstream.onerror = () => {
         try {
           peer.close()
-        } catch {}
+        } catch (_) {
+          void _
+        }
       }
 
       const rawWs = (peer as unknown as { _internal: { ws: { on: (...args: never) => unknown } } })

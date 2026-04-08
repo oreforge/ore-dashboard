@@ -25,7 +25,7 @@ async function fetchProjects() {
       const reason = (result as PromiseRejectedResult).reason
       let errorMsg = 'Failed to fetch status'
       if (reason instanceof OreConnectionError) errorMsg = 'Unable to connect'
-      else if (reason instanceof OreApiError) errorMsg = reason.detail
+      else if (reason instanceof OreApiError) errorMsg = String(reason.detail)
       else if (reason instanceof Error) errorMsg = reason.message
       return {
         name,
@@ -40,7 +40,7 @@ async function fetchProjects() {
     if (e instanceof OreConnectionError) {
       msg = 'Unable to connect to the server'
     } else if (e instanceof OreApiError) {
-      msg = e.detail
+      msg = String(e.detail)
     } else {
       msg = e instanceof Error ? e.message : String(e)
     }

@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import type { ServerStatus } from '@oreforge/sdk'
-import { TerminalIcon } from 'lucide-vue-next'
+import { Loader2Icon, TerminalIcon } from 'lucide-vue-next'
 
 const route = useRoute()
 const name = computed(() => route.params.name as string)
@@ -17,6 +17,19 @@ const allServers = computed<ServerStatus[]>(() => {
 })
 
 const selectedServer = ref('')
+const terminalRef = ref<InstanceType<typeof ConsoleTerminal> | null>(null)
+
+const connectionLabel = computed(() => {
+  if (terminalRef.value?.connecting) return 'Connecting'
+  if (terminalRef.value?.connected) return 'Connected'
+  return 'Disconnected'
+})
+
+const connectionDot = computed(() => {
+  if (terminalRef.value?.connecting) return 'bg-yellow-500'
+  if (terminalRef.value?.connected) return 'bg-emerald-500'
+  return 'bg-muted-foreground/50'
+})
 
 watch(
   allServers,
@@ -66,9 +79,15 @@ watch(
             </SelectItem>
           </SelectContent>
         </Select>
+        <div v-if="selectedServer" class="flex items-center gap-1.5 text-xs text-muted-foreground">
+          <Loader2Icon v-if="terminalRef?.connecting" class="size-3 animate-spin" />
+          <span v-else class="inline-block size-2 rounded-full" :class="connectionDot" />
+          {{ connectionLabel }}
+        </div>
       </div>
       <ConsoleTerminal
         v-if="selectedServer"
+        ref="terminalRef"
         class="min-h-0 flex-1"
         :project-name="name"
         :server-name="selectedServer"

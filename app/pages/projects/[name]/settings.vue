@@ -39,7 +39,7 @@ async function triggerWebhook() {
     toast.success('Webhook triggered successfully')
   } catch (e) {
     if (e instanceof OreApiError) {
-      toast.error(`HTTP ${e.status}: ${e.detail}`)
+      toast.error(`HTTP ${e.status}: ${String(e.detail)}`)
     } else {
       toast.error(e instanceof Error ? e.message : 'Failed to trigger webhook')
     }
@@ -110,24 +110,34 @@ async function handleRemove() {
                 readonly
                 class="font-mono text-xs"
               />
-              <Button
-                variant="outline"
-                size="icon"
-                class="shrink-0"
-                @click="copyToClipboard(webhookUrl)"
-              >
-                <CopyIcon class="size-3.5" />
-              </Button>
-              <Button
-                size="icon"
-                variant="secondary"
-                class="shrink-0"
-                :disabled="triggering || !webhook.secret"
-                @click="triggerWebhook"
-              >
-                <Loader2Icon v-if="triggering" class="size-3.5 animate-spin" />
-                <WebhookIcon v-else class="size-3.5" />
-              </Button>
+              <Tooltip>
+                <TooltipTrigger as-child>
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    class="shrink-0"
+                    @click="copyToClipboard(webhookUrl)"
+                  >
+                    <CopyIcon class="size-3.5" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>Copy URL</TooltipContent>
+              </Tooltip>
+              <Tooltip>
+                <TooltipTrigger as-child>
+                  <Button
+                    size="icon"
+                    variant="secondary"
+                    class="shrink-0"
+                    :disabled="triggering || !webhook.secret"
+                    @click="triggerWebhook"
+                  >
+                    <Loader2Icon v-if="triggering" class="size-3.5 animate-spin" />
+                    <WebhookIcon v-else class="size-3.5" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>Trigger webhook</TooltipContent>
+              </Tooltip>
             </div>
           </div>
         </CardContent>

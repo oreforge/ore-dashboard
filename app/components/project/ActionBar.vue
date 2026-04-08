@@ -8,15 +8,11 @@ import {
   RefreshCwIcon,
   SquareIcon,
   Trash2Icon,
-  XIcon,
 } from 'lucide-vue-next'
 
 const props = defineProps<{ projectName: string }>()
 
 const ops = useProjectOperations(() => props.projectName)
-
-const showLog = computed(() => ops.activeOp.value !== null || ops.lastOp.value !== undefined)
-const currentOp = computed(() => ops.activeOp.value ?? ops.lastOp.value)
 
 const upOpen = ref(false)
 const upNoCache = ref(false)
@@ -36,6 +32,17 @@ function runBuild() {
   buildOpen.value = false
   ops.handleBuild({ no_cache: buildNoCache.value })
   buildNoCache.value = false
+}
+
+const confirmAction = ref<{ label: string; action: () => void } | null>(null)
+
+function confirmAndRun(label: string, action: () => void) {
+  confirmAction.value = { label, action }
+}
+
+function executeConfirmed() {
+  confirmAction.value?.action()
+  confirmAction.value = null
 }
 </script>
 
@@ -142,7 +149,7 @@ function runBuild() {
           variant="destructive"
           class="rounded-r-none"
           :disabled="ops.anyRunning.value"
-          @click="ops.handlePrune()"
+          @click="confirmAndRun('Prune all', () => ops.handlePrune())"
         >
           <Loader2Icon v-if="ops.prune.running.value" class="mr-1.5 size-3.5 animate-spin" />
           <Trash2Icon v-else class="mr-1.5 size-3.5" />
@@ -160,10 +167,10 @@ function runBuild() {
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="start">
-            <DropdownMenuItem @click="ops.handlePrune('all')">All</DropdownMenuItem>
-            <DropdownMenuItem @click="ops.handlePrune('servers')">Servers</DropdownMenuItem>
-            <DropdownMenuItem @click="ops.handlePrune('images')">Images</DropdownMenuItem>
-            <DropdownMenuItem @click="ops.handlePrune('data')">Data</DropdownMenuItem>
+            <DropdownMenuItem @click="confirmAndRun('Prune all', () => ops.handlePrune('all'))">All</DropdownMenuItem>
+            <DropdownMenuItem @click="confirmAndRun('Prune servers', () => ops.handlePrune('servers'))">Servers</DropdownMenuItem>
+            <DropdownMenuItem @click="confirmAndRun('Prune images', () => ops.handlePrune('images'))">Images</DropdownMenuItem>
+            <DropdownMenuItem @click="confirmAndRun('Prune data', () => ops.handlePrune('data'))">Data</DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
       </div>
@@ -174,7 +181,7 @@ function runBuild() {
           variant="destructive"
           class="rounded-r-none"
           :disabled="ops.anyRunning.value"
-          @click="ops.handleClean()"
+          @click="confirmAndRun('Clean all', () => ops.handleClean())"
         >
           <Loader2Icon v-if="ops.clean.running.value" class="mr-1.5 size-3.5 animate-spin" />
           <EraserIcon v-else class="mr-1.5 size-3.5" />
@@ -192,48 +199,31 @@ function runBuild() {
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="start">
-            <DropdownMenuItem @click="ops.handleClean('all')">All</DropdownMenuItem>
-            <DropdownMenuItem @click="ops.handleClean('cache')">Cache</DropdownMenuItem>
-            <DropdownMenuItem @click="ops.handleClean('builds')">Builds</DropdownMenuItem>
+            <DropdownMenuItem @click="confirmAndRun('Clean all', () => ops.handleClean('all'))">All</DropdownMenuItem>
+            <DropdownMenuItem @click="confirmAndRun('Clean cache', () => ops.handleClean('cache'))">Cache</DropdownMenuItem>
+            <DropdownMenuItem @click="confirmAndRun('Clean builds', () => ops.handleClean('builds'))">Builds</DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
       </div>
 
-      <Button
-        v-if="ops.anyRunning.value"
-        size="sm"
-        variant="outline"
-        @click="ops.cancelActive()"
-      >
-        <XIcon class="mr-1.5 size-3.5" />
-        Cancel
-      </Button>
     </div>
 
-    <div v-if="showLog" class="mt-4">
-      <ProjectStreamLog
-        :lines="currentOp?.lines.value ?? []"
-        :running="currentOp?.running.value ?? false"
-      />
-      <div class="mt-2 flex items-center justify-between">
-        <Alert
-          v-if="currentOp?.aborted.value"
-          class="flex-1 py-2"
-        >
-          <AlertDescription class="text-xs text-muted-foreground">
-            Operation cancelled
-          </AlertDescription>
-        </Alert>
-        <Alert
-          v-else-if="currentOp?.error.value"
-          variant="destructive"
-          class="flex-1 py-2"
-        >
-          <AlertDescription class="text-xs">
-            {{ currentOp?.error.value }}
-          </AlertDescription>
-        </Alert>
-      </div>
-    </div>
+    <Dialog :open="!!confirmAction" @update:open="confirmAction = null">
+      <DialogContent class="sm:max-w-md">
+        <DialogHeader>
+          <DialogTitle>Are you sure?</DialogTitle>
+          <DialogDescription>
+            This will <span class="font-semibold text-foreground lowercase">{{ confirmAction?.label }}</span>
+            resources for this project. This action cannot be undone.
+          </DialogDescription>
+        </DialogHeader>
+        <DialogFooter>
+          <Button variant="outline" @click="confirmAction = null">Cancel</Button>
+          <Button variant="destructive" @click="executeConfirmed">
+            {{ confirmAction?.label }}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   </div>
 </template>

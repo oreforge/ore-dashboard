@@ -6,10 +6,12 @@ const props = defineProps<{
   serverName: string
 }>()
 
-const { terminalRef, error, connect, disconnect, fit } = useConsole(
+const { terminalRef, connecting, connected, error, connect, disconnect, fit } = useConsole(
   () => props.projectName,
   () => props.serverName,
 )
+
+defineExpose({ connecting, connected })
 
 const { state } = useSidebar()
 watch(state, () => {

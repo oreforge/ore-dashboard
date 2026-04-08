@@ -33,15 +33,18 @@ function liveUptime(snapshotNs?: number) {
 
 <template>
   <div>
-    <div class="mb-6">
-      <template v-if="loading">
-        <Skeleton class="h-8 w-40" />
-        <Skeleton class="mt-0.5 h-5 w-24" />
-      </template>
-      <template v-else>
-        <h1 class="text-2xl font-semibold tracking-tight">{{ name }}</h1>
-        <p v-if="status" class="mt-0.5 text-sm text-muted-foreground">{{ status.network }}</p>
-      </template>
+    <div class="mb-6 flex flex-wrap items-start justify-between gap-4">
+      <div>
+        <template v-if="loading">
+          <Skeleton class="h-8 w-40" />
+          <Skeleton class="mt-0.5 h-5 w-24" />
+        </template>
+        <template v-else>
+          <h1 class="text-2xl font-semibold tracking-tight">{{ name }}</h1>
+          <p v-if="status" class="mt-0.5 text-sm text-muted-foreground">{{ status.network }}</p>
+        </template>
+      </div>
+      <ProjectActionBar v-if="!loading" :project-name="name" />
     </div>
 
     <div v-if="loading" class="mb-6 grid gap-4 md:grid-cols-2 lg:grid-cols-4">
@@ -92,12 +95,18 @@ function liveUptime(snapshotNs?: number) {
       </Card>
     </div>
 
-    <div class="mb-8">
-      <ProjectActionBar :project-name="name" />
-    </div>
-
     <template v-if="!loading && status">
-      <div v-if="status.servers.length > 0" class="space-y-8">
+      <div v-if="status.servers.length === 0" class="flex flex-col items-center justify-center rounded-xl border border-dashed py-16">
+        <div class="flex size-14 items-center justify-center rounded-full bg-muted">
+          <ServerIcon class="size-6 text-muted-foreground" />
+        </div>
+        <h2 class="mt-4 text-base font-semibold">No servers running</h2>
+        <p class="mt-1 text-sm text-muted-foreground">
+          Click Up to start this project's servers.
+        </p>
+      </div>
+
+      <div v-else class="space-y-8">
         <div>
           <h2 class="mb-3 flex items-center gap-1.5 text-sm font-medium uppercase tracking-wider text-muted-foreground">
             <ServerIcon class="size-3.5" /> Servers
