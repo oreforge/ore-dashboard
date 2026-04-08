@@ -3,6 +3,14 @@ const upstreams = new Map<
   { ws: WebSocket; pending: { data: string | ArrayBuffer; binary: boolean }[] }
 >()
 
+function safeClose(peer: { close: () => void }) {
+  try {
+    peer.close()
+  } catch (_) {
+    void _
+  }
+}
+
 export default defineEventHandler({
   handler: (event) => {
     const { oreApiUrl, oreToken } = useRuntimeConfig(event)
@@ -37,20 +45,8 @@ export default defineEventHandler({
           void _
         }
       }
-      upstream.onclose = () => {
-        try {
-          peer.close()
-        } catch (_) {
-          void _
-        }
-      }
-      upstream.onerror = () => {
-        try {
-          peer.close()
-        } catch (_) {
-          void _
-        }
-      }
+      upstream.onclose = () => safeClose(peer)
+      upstream.onerror = () => safeClose(peer)
 
       const rawWs = (peer as unknown as { _internal: { ws: { on: (...args: never) => unknown } } })
         ._internal?.ws
