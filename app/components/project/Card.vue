@@ -2,7 +2,7 @@
 import { Loader2Icon, PlayIcon, SquareIcon } from 'lucide-vue-next'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import type { ProjectEntry } from '~/types/project'
-import { aggregateStateClass, aggregateStatusDot, getAggregateState } from '~/utils/status-colors'
+import { aggregateStateClass, getAggregateState } from '~/utils/status-colors'
 
 const props = defineProps<{ project: ProjectEntry }>()
 
@@ -40,26 +40,24 @@ function handleDown(e: Event) {
     <Card class="transition-colors group-hover:border-foreground/15">
       <CardHeader class="pb-3">
         <div class="flex items-center justify-between">
-          <div class="flex items-center gap-2 min-w-0">
-            <Avatar class="size-6 shrink-0">
+          <div class="flex items-start gap-3 min-w-0">
+            <Avatar class="size-10 shrink-0">
               <img :src="iconUrl" :alt="project.name" class="aspect-square size-full object-cover" @error="($event.target as HTMLImageElement).style.display = 'none'">
-              <AvatarFallback>{{ initials }}</AvatarFallback>
+              <AvatarFallback class="text-sm">{{ initials }}</AvatarFallback>
             </Avatar>
-            <span
-              class="inline-block size-2 shrink-0 rounded-full"
-              :class="aggregateStatusDot(project.status)"
-            />
-            <CardTitle class="truncate text-sm font-semibold">
-              {{ project.name }}
-            </CardTitle>
+            <div class="min-w-0">
+              <CardTitle class="truncate text-sm font-semibold">
+                {{ project.name }}
+              </CardTitle>
+              <p v-if="project.status" class="truncate text-xs text-muted-foreground">
+                {{ project.status.network }}
+              </p>
+            </div>
           </div>
           <Badge variant="outline" :class="aggregateClass" class="shrink-0 text-[11px] font-medium capitalize">
             {{ aggregateState }}
           </Badge>
         </div>
-        <p v-if="project.status" class="truncate text-xs text-muted-foreground">
-          {{ project.status.network }}
-        </p>
       </CardHeader>
       <CardContent class="pt-0">
         <div class="flex items-center justify-between">
