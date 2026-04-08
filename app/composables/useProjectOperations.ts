@@ -1,4 +1,4 @@
-import type { BuildRequest, CleanRequest, PruneRequest, UpRequest } from '@oreforge/sdk'
+import type { BuildRequest, CleanRequest, UpRequest } from '@oreforge/sdk'
 import { toast } from 'vue-sonner'
 
 const operationsMap = new Map<string, ReturnType<typeof createOperations>>()
@@ -20,7 +20,6 @@ function createOperations(projectName: string) {
   const down = useStreamOperation()
   const build = useStreamOperation()
   const update = useStreamOperation()
-  const prune = useStreamOperation()
   const clean = useStreamOperation()
 
   const anyRunning = computed(
@@ -29,7 +28,6 @@ function createOperations(projectName: string) {
       down.running.value ||
       build.running.value ||
       update.running.value ||
-      prune.running.value ||
       clean.running.value,
   )
 
@@ -37,7 +35,6 @@ function createOperations(projectName: string) {
   const runDown = withToast(down, 'Down')
   const runBuild = withToast(build, 'Build')
   const runUpdate = withToast(update, 'Update')
-  const runPrune = withToast(prune, 'Prune')
   const runClean = withToast(clean, 'Clean')
 
   function handleUp(opts?: UpRequest) {
@@ -58,9 +55,6 @@ function createOperations(projectName: string) {
   function handleUpdate() {
     runUpdate((signal) => client.projects.update(projectName, { signal }))
   }
-  function handlePrune(target: PruneRequest['target'] = 'all') {
-    runPrune((signal) => client.projects.get(projectName).prune({ target }, { signal }))
-  }
   function handleClean(target: CleanRequest['target'] = 'all') {
     runClean((signal) => client.projects.get(projectName).clean({ target }, { signal }))
   }
@@ -70,14 +64,12 @@ function createOperations(projectName: string) {
     down,
     build,
     update,
-    prune,
     clean,
     anyRunning,
     handleUp,
     handleDown,
     handleBuild,
     handleUpdate,
-    handlePrune,
     handleClean,
   }
 }

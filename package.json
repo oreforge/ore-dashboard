@@ -15,7 +15,7 @@
     "format": "biome format --fix ."
   },
   "dependencies": {
-    "@oreforge/sdk": "0.0.8",
+    "@oreforge/sdk": "0.0.9",
     "@tanstack/vue-table": "^8.21.3",
     "@vueuse/core": "^14.2.1",
     "@xterm/addon-fit": "^0.11.0",

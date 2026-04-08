@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import {
   ChevronDownIcon,
-  EraserIcon,
   HammerIcon,
   Loader2Icon,
   PlayIcon,
@@ -149,42 +148,10 @@ function executeConfirmed() {
           variant="destructive"
           class="rounded-r-none"
           :disabled="ops.anyRunning.value"
-          @click="confirmAndRun('Prune all', () => ops.handlePrune())"
-        >
-          <Loader2Icon v-if="ops.prune.running.value" class="mr-1.5 size-3.5 animate-spin" />
-          <Trash2Icon v-else class="mr-1.5 size-3.5" />
-          Prune
-        </Button>
-        <DropdownMenu>
-          <DropdownMenuTrigger as-child>
-            <Button
-              size="sm"
-              variant="destructive"
-              class="rounded-l-none border-l border-l-background/20 px-1.5"
-              :disabled="ops.anyRunning.value"
-            >
-              <ChevronDownIcon class="size-3.5" />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="start">
-            <DropdownMenuItem @click="confirmAndRun('Prune all', () => ops.handlePrune('all'))">All</DropdownMenuItem>
-            <DropdownMenuItem @click="confirmAndRun('Prune servers', () => ops.handlePrune('servers'))">Servers</DropdownMenuItem>
-            <DropdownMenuItem @click="confirmAndRun('Prune images', () => ops.handlePrune('images'))">Images</DropdownMenuItem>
-            <DropdownMenuItem @click="confirmAndRun('Prune data', () => ops.handlePrune('data'))">Data</DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
-      </div>
-
-      <div class="flex items-center">
-        <Button
-          size="sm"
-          variant="destructive"
-          class="rounded-r-none"
-          :disabled="ops.anyRunning.value"
           @click="confirmAndRun('Clean all', () => ops.handleClean())"
         >
           <Loader2Icon v-if="ops.clean.running.value" class="mr-1.5 size-3.5 animate-spin" />
-          <EraserIcon v-else class="mr-1.5 size-3.5" />
+          <Trash2Icon v-else class="mr-1.5 size-3.5" />
           Clean
         </Button>
         <DropdownMenu>
@@ -200,6 +167,9 @@ function executeConfirmed() {
           </DropdownMenuTrigger>
           <DropdownMenuContent align="start">
             <DropdownMenuItem @click="confirmAndRun('Clean all', () => ops.handleClean('all'))">All</DropdownMenuItem>
+            <DropdownMenuItem @click="confirmAndRun('Clean containers', () => ops.handleClean('containers'))">Containers</DropdownMenuItem>
+            <DropdownMenuItem @click="confirmAndRun('Clean images', () => ops.handleClean('images'))">Images</DropdownMenuItem>
+            <DropdownMenuItem @click="confirmAndRun('Clean volumes', () => ops.handleClean('volumes'))">Volumes</DropdownMenuItem>
             <DropdownMenuItem @click="confirmAndRun('Clean cache', () => ops.handleClean('cache'))">Cache</DropdownMenuItem>
             <DropdownMenuItem @click="confirmAndRun('Clean builds', () => ops.handleClean('builds'))">Builds</DropdownMenuItem>
           </DropdownMenuContent>
