@@ -6,17 +6,18 @@ const projectName = computed(() => route.params.name as string | undefined)
 
 const hasProject = computed(() => !!projectName.value)
 
-const items = computed(() => {
-  const base = projectName.value ? `/projects/${projectName.value}` : ''
-  return [
-    { label: 'Overview', icon: GaugeIcon, to: base || '#' },
-    { label: 'Console', icon: TerminalSquareIcon, to: base ? `${base}/console` : '#' },
-    { label: 'Settings', icon: SettingsIcon, to: base ? `${base}/settings` : '#' },
-  ]
-})
+const navItems = [
+  { label: 'Overview', icon: GaugeIcon, path: '' },
+  { label: 'Console', icon: TerminalSquareIcon, path: '/console' },
+  { label: 'Settings', icon: SettingsIcon, path: '/settings' },
+]
 
-function isActive(to: string) {
-  return route.path === to
+function resolveTo(path: string) {
+  return `/projects/${projectName.value}${path}`
+}
+
+function isActive(path: string) {
+  return route.path === resolveTo(path)
 }
 </script>
 
@@ -25,21 +26,18 @@ function isActive(to: string) {
     <SidebarGroupLabel>Manage</SidebarGroupLabel>
     <SidebarGroupContent>
       <SidebarMenu>
-        <SidebarMenuItem v-for="item in items" :key="item.label">
+        <SidebarMenuItem v-for="item in navItems" :key="item.label">
           <SidebarMenuButton
             v-if="hasProject"
             as-child
-            :is-active="isActive(item.to)"
+            :is-active="isActive(item.path)"
           >
-            <NuxtLink :to="item.to">
+            <NuxtLink :to="resolveTo(item.path)">
               <component :is="item.icon" class="size-4" />
               <span>{{ item.label }}</span>
             </NuxtLink>
           </SidebarMenuButton>
-          <SidebarMenuButton
-            v-else
-            disabled
-          >
+          <SidebarMenuButton v-else disabled>
             <component :is="item.icon" class="size-4" />
             <span>{{ item.label }}</span>
           </SidebarMenuButton>

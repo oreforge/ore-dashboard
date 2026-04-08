@@ -1,26 +1,17 @@
 <script setup lang="ts">
 import { Loader2Icon, PlayIcon, SquareIcon } from 'lucide-vue-next'
 import type { ProjectEntry } from '~/types/project'
-import { aggregateStateClass, aggregateStatusDot } from '~/utils/status-colors'
+import { aggregateStateClass, aggregateStatusDot, getAggregateState } from '~/utils/status-colors'
 
 const props = defineProps<{ project: ProjectEntry }>()
 
 const serverCount = computed(() => props.project.status?.servers.length ?? 0)
 const serviceCount = computed(() => props.project.status?.services?.length ?? 0)
-
 const runningCount = computed(
   () => props.project.status?.servers.filter((s) => s.container.state === 'running').length ?? 0,
 )
 
-const aggregateState = computed(() => {
-  if (!props.project.status) return 'unknown'
-  const states = props.project.status.servers.map((s) => s.container.state)
-  if (states.length === 0) return 'unknown'
-  if (states.every((s) => s === 'running')) return 'running'
-  if (states.some((s) => s === 'running')) return 'partial'
-  return 'stopped'
-})
-
+const aggregateState = computed(() => getAggregateState(props.project.status))
 const aggregateClass = computed(() => aggregateStateClass(aggregateState.value))
 
 const upOp = useStreamOperation()
@@ -42,7 +33,7 @@ function handleDown(e: Event) {
 </script>
 
 <template>
-  <NuxtLink :to="`/projects/${project.name}`" class="group block">
+  <NuxtLink :to="`/projects/${project.name}`" class="group block rounded-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
     <Card class="transition-colors group-hover:border-foreground/15">
       <CardHeader class="pb-3">
         <div class="flex items-center justify-between">

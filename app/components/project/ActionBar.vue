@@ -202,7 +202,7 @@ function runBuild() {
       <Button
         v-if="ops.anyRunning.value"
         size="sm"
-        variant="destructive"
+        variant="outline"
         @click="ops.cancelActive()"
       >
         <XIcon class="mr-1.5 size-3.5" />

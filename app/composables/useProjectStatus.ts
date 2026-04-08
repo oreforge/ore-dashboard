@@ -1,5 +1,6 @@
 import type { NetworkStatus } from '@oreforge/sdk'
 import { OreApiError, OreConnectionError } from '@oreforge/sdk'
+import { useIntervalFn } from '@vueuse/core'
 import { toast } from 'vue-sonner'
 
 export function useProjectStatus(name: MaybeRef<string>) {
@@ -8,7 +9,6 @@ export function useProjectStatus(name: MaybeRef<string>) {
   const loading = ref(true)
   const error = ref<string | null>(null)
   const fetchedAt = ref<number>(0)
-  let polling: ReturnType<typeof setInterval> | null = null
 
   async function refresh() {
     try {
@@ -31,14 +31,7 @@ export function useProjectStatus(name: MaybeRef<string>) {
     }
   }
 
-  onMounted(() => {
-    refresh()
-    polling = setInterval(refresh, 3000)
-  })
-
-  onUnmounted(() => {
-    if (polling) clearInterval(polling)
-  })
+  useIntervalFn(refresh, 3000, { immediateCallback: true })
 
   return { status, loading, error, fetchedAt, refresh }
 }

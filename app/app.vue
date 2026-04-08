@@ -1,5 +1,5 @@
 <script setup lang="ts">
-useHead({ htmlAttrs: { class: 'dark' } })
+useHead({ titleTemplate: '%s | OreForge', htmlAttrs: { class: 'dark' } })
 </script>
 
 <template>

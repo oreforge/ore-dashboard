@@ -2,11 +2,13 @@ import type { Console as OreConsoleType } from '@oreforge/sdk'
 import { FitAddon } from '@xterm/addon-fit'
 import { Terminal } from '@xterm/xterm'
 
+let colorCtx: CanvasRenderingContext2D | null = null
+
 function resolveColor(el: HTMLElement): string {
-  const ctx = document.createElement('canvas').getContext('2d')
-  if (!ctx) return ''
-  ctx.fillStyle = getComputedStyle(el).backgroundColor
-  return ctx.fillStyle
+  if (!colorCtx) colorCtx = document.createElement('canvas').getContext('2d')
+  if (!colorCtx) return ''
+  colorCtx.fillStyle = getComputedStyle(el).backgroundColor
+  return colorCtx.fillStyle
 }
 
 export function useConsole(projectName: MaybeRef<string>, serverName: MaybeRef<string>) {

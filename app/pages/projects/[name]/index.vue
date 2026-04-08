@@ -1,15 +1,13 @@
 <script setup lang="ts">
-import type { NetworkStatus } from '@oreforge/sdk'
+import { useIntervalFn } from '@vueuse/core'
 import { ActivityIcon, HeartPulseIcon, NetworkIcon, ServerIcon } from 'lucide-vue-next'
 
 const route = useRoute()
 const name = computed(() => route.params.name as string)
 
-const { status, loading, fetchedAt } = inject('projectStatus') as {
-  status: Ref<NetworkStatus | null>
-  loading: Ref<boolean>
-  fetchedAt: Ref<number>
-}
+const projectStatus = inject<ProjectStatusContext>('projectStatus')
+if (!projectStatus) throw new Error('projectStatus not provided')
+const { status, loading, fetchedAt } = projectStatus
 
 const serverCount = computed(() => status.value?.servers.length ?? 0)
 const serviceCount = computed(() => status.value?.services?.length ?? 0)
@@ -21,57 +19,15 @@ const healthyCount = computed(
 )
 
 const now = ref(Date.now())
-let ticker: ReturnType<typeof setInterval> | null = null
-onMounted(() => {
-  ticker = setInterval(() => {
-    now.value = Date.now()
-  }, 1000)
-})
-onUnmounted(() => {
-  if (ticker) clearInterval(ticker)
-})
+useIntervalFn(() => {
+  now.value = Date.now()
+}, 1000)
 
 function liveUptime(snapshotNs?: number) {
   if (!snapshotNs || !fetchedAt.value) return '—'
   const elapsedMs = now.value - fetchedAt.value
   const totalSecs = Math.floor(snapshotNs / 1_000_000_000) + Math.floor(elapsedMs / 1000)
   return formatUptime(totalSecs)
-}
-
-function formatUptime(secs: number) {
-  const mins = Math.floor(secs / 60)
-  const hours = Math.floor(mins / 60)
-  const days = Math.floor(hours / 24)
-  if (days > 0) return `${days}d ${hours % 24}h`
-  if (hours > 0) return `${hours}h ${mins % 60}m`
-  if (mins > 0) return `${mins}m ${secs % 60}s`
-  return `${secs}s`
-}
-
-function formatBytes(bytes: number) {
-  if (!bytes) return '—'
-  const mb = bytes / (1024 * 1024)
-  if (mb >= 1024) return `${(mb / 1024).toFixed(1)} GB`
-  return `${mb.toFixed(0)} MB`
-}
-
-function formatMemory(mem: { used_bytes: number; limit_bytes: number; percent: number }) {
-  if (!mem.limit_bytes && !mem.used_bytes) return '—'
-  const used = formatBytes(mem.used_bytes)
-  if (!mem.limit_bytes) return used
-  const limit = formatBytes(mem.limit_bytes)
-  return `${used} / ${limit}`
-}
-
-function formatCpu(cpu: { limit: number; percent: number }) {
-  if (!cpu.limit && !cpu.percent) return '—'
-  if (cpu.percent > 0) return `${cpu.percent}%`
-  return `${cpu.limit} cores`
-}
-
-function formatPorts(ports?: { host_port: number; container_port: number; protocol: string }[]) {
-  if (!ports || ports.length === 0) return '—'
-  return ports.map((p) => `${p.host_port}:${p.container_port}/${p.protocol}`).join(', ')
 }
 </script>
 

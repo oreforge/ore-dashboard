@@ -1,13 +1,15 @@
 <script setup lang="ts">
-import type { NetworkStatus, ServerStatus } from '@oreforge/sdk'
+import type { ServerStatus } from '@oreforge/sdk'
 import { TerminalIcon } from 'lucide-vue-next'
 
 const route = useRoute()
 const name = computed(() => route.params.name as string)
 
-const { status } = inject('projectStatus') as {
-  status: Ref<NetworkStatus | null>
-}
+useHead({ title: computed(() => `Console — ${name.value}`) })
+
+const projectStatus = inject<ProjectStatusContext>('projectStatus')
+if (!projectStatus) throw new Error('projectStatus not provided')
+const { status } = projectStatus
 
 const allServers = computed<ServerStatus[]>(() => {
   if (!status.value) return []

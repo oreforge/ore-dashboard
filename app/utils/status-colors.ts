@@ -1,3 +1,5 @@
+export type AggregateState = 'running' | 'partial' | 'stopped' | 'unknown'
+
 export function containerStateClass(state: string): string {
   switch (state) {
     case 'running':
@@ -28,7 +30,17 @@ export function healthStateClass(health: string): string {
   }
 }
 
-export function aggregateStateClass(state: string): string {
+export function getAggregateState(
+  status: { servers: { container: { state: string } }[] } | null,
+): AggregateState {
+  if (!status || status.servers.length === 0) return 'unknown'
+  const states = status.servers.map((s) => s.container.state)
+  if (states.every((s) => s === 'running')) return 'running'
+  if (states.some((s) => s === 'running')) return 'partial'
+  return 'stopped'
+}
+
+export function aggregateStateClass(state: AggregateState): string {
   switch (state) {
     case 'running':
       return 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20'
@@ -41,13 +53,15 @@ export function aggregateStateClass(state: string): string {
   }
 }
 
+const DOT_COLORS: Record<AggregateState, string> = {
+  running: 'bg-emerald-500',
+  partial: 'bg-yellow-500',
+  stopped: 'bg-red-500',
+  unknown: 'bg-muted-foreground/50',
+}
+
 export function aggregateStatusDot(
   status: { servers: { container: { state: string } }[] } | null,
 ): string {
-  if (!status) return 'bg-muted-foreground/50'
-  const states = status.servers.map((s) => s.container.state)
-  if (states.every((s) => s === 'running')) return 'bg-emerald-500'
-  if (states.some((s) => s === 'running')) return 'bg-yellow-500'
-  if (states.some((s) => s === 'dead' || s === 'exited')) return 'bg-red-500'
-  return 'bg-muted-foreground/50'
+  return DOT_COLORS[getAggregateState(status)]
 }

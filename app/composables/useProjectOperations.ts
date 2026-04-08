@@ -92,8 +92,10 @@ function createOperations(projectName: string) {
 
 export function useProjectOperations(projectName: MaybeRef<string>) {
   const name = toValue(projectName)
-  if (!operationsMap.has(name)) {
-    operationsMap.set(name, createOperations(name))
+  let ops = operationsMap.get(name)
+  if (!ops) {
+    ops = createOperations(name)
+    operationsMap.set(name, ops)
   }
-  return operationsMap.get(name) as ReturnType<typeof createOperations>
+  return ops
 }

@@ -2,11 +2,13 @@
 const route = useRoute()
 const name = computed(() => route.params.name as string)
 
+useHead({ title: name })
+
 const { status, loading, error, fetchedAt } = useProjectStatus(name)
 
 useProjectOperations(name)
 
-provide('projectStatus', { status, loading, error, fetchedAt })
+provide<ProjectStatusContext>('projectStatus', { status, loading, error, fetchedAt })
 </script>
 
 <template>

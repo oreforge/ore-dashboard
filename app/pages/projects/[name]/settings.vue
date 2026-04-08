@@ -7,6 +7,9 @@ import { toast } from 'vue-sonner'
 const route = useRoute()
 const router = useRouter()
 const name = computed(() => route.params.name as string)
+
+useHead({ title: computed(() => `Settings — ${name.value}`) })
+
 const client = useOreClient()
 
 const webhook = ref<WebhookInfoResponse | null>(null)
@@ -131,16 +134,16 @@ async function handleRemove() {
       </Card>
 
       <Card>
-        <CardHeader class="flex flex-row items-center justify-between space-y-0">
-          <div class="space-y-1">
-            <CardTitle>Delete project</CardTitle>
-            <CardDescription>
-              Permanently delete this project and stop all running servers. This cannot be undone.
-            </CardDescription>
-          </div>
-          <Button variant="destructive" size="sm" class="shrink-0" @click="showConfirm = true">
-            Delete project
-          </Button>
+        <CardHeader>
+          <CardTitle>Delete project</CardTitle>
+          <CardDescription>
+            Permanently delete this project and stop all running servers. This cannot be undone.
+          </CardDescription>
+          <CardAction>
+            <Button variant="destructive" size="sm" @click="showConfirm = true">
+              Delete project
+            </Button>
+          </CardAction>
         </CardHeader>
       </Card>
     </div>

@@ -1,6 +1,8 @@
 <script setup lang="ts">
 import { PlusIcon, ServerIcon } from 'lucide-vue-next'
 
+useHead({ title: 'Projects' })
+
 const { projects, loading } = useProjects()
 const showAddDialog = ref(false)
 </script>
