@@ -1,8 +1,10 @@
 import type { ContainerState, HealthState } from '@oreforge/sdk'
 import type { ColumnDef } from '@tanstack/vue-table'
+import type { Ref } from 'vue'
 import { h } from 'vue'
 import ContainerRowActions from '~/components/project/ContainerRowActions.vue'
 import HealthBadge from '~/components/project/HealthBadge.vue'
+import LiveUptime from '~/components/project/LiveUptime.vue'
 import StatusBadge from '~/components/project/StatusBadge.vue'
 import Checkbox from '~/components/ui/checkbox/Checkbox.vue'
 
@@ -19,7 +21,7 @@ interface ServiceRow {
 
 export function createServiceColumns(
   projectName: () => string,
-  liveUptime: (ns?: number) => string,
+  fetchedAt: Ref<number>,
 ): ColumnDef<ServiceRow>[] {
   return [
     {
@@ -94,11 +96,10 @@ export function createServiceColumns(
       header: 'Uptime',
       size: 100,
       cell: ({ row }) =>
-        h(
-          'span',
-          { class: 'whitespace-nowrap tabular-nums text-muted-foreground' },
-          liveUptime(row.original.container.uptime),
-        ),
+        h(LiveUptime, {
+          uptimeNs: row.original.container.uptime,
+          fetchedAt: fetchedAt.value,
+        }),
     },
     {
       id: 'actions',

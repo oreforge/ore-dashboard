@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import { useIntervalFn } from '@vueuse/core'
 import { ActivityIcon, HeartPulseIcon, NetworkIcon, PlayIcon, ServerIcon } from 'lucide-vue-next'
 import { createServerColumns } from '~/components/project/server-columns'
 import { createServiceColumns } from '~/components/project/service-columns'
@@ -23,20 +22,8 @@ const healthyCount = computed(
 const aggregateState = computed(() => getAggregateState(status.value))
 const ops = useProjectOperations(() => name.value)
 
-const now = ref(Date.now())
-useIntervalFn(() => {
-  now.value = Date.now()
-}, 1000)
-
-function liveUptime(snapshotNs?: number) {
-  if (!snapshotNs || !fetchedAt.value) return '—'
-  const elapsedMs = now.value - fetchedAt.value
-  const totalSecs = Math.floor(snapshotNs / 1_000_000_000) + Math.floor(elapsedMs / 1000)
-  return formatUptime(totalSecs)
-}
-
-const serverColumns = createServerColumns(() => name.value, liveUptime)
-const serviceColumns = createServiceColumns(() => name.value, liveUptime)
+const serverColumns = createServerColumns(() => name.value, fetchedAt)
+const serviceColumns = createServiceColumns(() => name.value, fetchedAt)
 </script>
 
 <template>
