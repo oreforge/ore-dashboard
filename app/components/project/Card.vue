@@ -15,9 +15,8 @@ const runningCount = computed(
 const aggregateState = computed(() => getAggregateState(props.project.status))
 const aggregateClass = computed(() => aggregateStateClass(aggregateState.value))
 
-const upOp = useStreamOperation()
-const downOp = useStreamOperation()
-const busy = computed(() => upOp.running.value || downOp.running.value)
+const ops = useProjectOperations(() => props.project.name)
+const busy = computed(() => ops.anyRunning.value)
 const client = useOreClient()
 const iconUrl = computed(() => client.projects.get(props.project.name).iconUrl)
 const initials = computed(() => props.project.name.slice(0, 2).toUpperCase())
@@ -25,13 +24,13 @@ const initials = computed(() => props.project.name.slice(0, 2).toUpperCase())
 function handleUp(e: Event) {
   e.preventDefault()
   e.stopPropagation()
-  upOp.execute((signal) => client.projects.get(props.project.name).up({}, { signal }))
+  ops.handleUp()
 }
 
 function handleDown(e: Event) {
   e.preventDefault()
   e.stopPropagation()
-  downOp.execute((signal) => client.projects.get(props.project.name).down({ signal }))
+  ops.handleDown()
 }
 </script>
 
@@ -75,7 +74,7 @@ function handleDown(e: Event) {
                   :disabled="busy"
                   @click="handleUp"
                 >
-                  <Loader2Icon v-if="upOp.running.value" class="size-3.5 animate-spin" />
+                  <Loader2Icon v-if="ops.up.running.value" class="size-3.5 animate-spin" />
                   <PlayIcon v-else class="size-3.5" />
                 </Button>
               </TooltipTrigger>
@@ -90,7 +89,7 @@ function handleDown(e: Event) {
                   :disabled="busy"
                   @click="handleDown"
                 >
-                  <Loader2Icon v-if="downOp.running.value" class="size-3.5 animate-spin" />
+                  <Loader2Icon v-if="ops.down.running.value" class="size-3.5 animate-spin" />
                   <SquareIcon v-else class="size-3.5" />
                 </Button>
               </TooltipTrigger>

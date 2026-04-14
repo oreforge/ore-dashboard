@@ -1,55 +1,44 @@
-import { toast } from 'vue-sonner'
+import { createOperationGroup } from './internal/createOperationGroup'
 
-const serverOpsMap = new Map<string, ReturnType<typeof createServerOps>>()
+type Action = 'start' | 'stop' | 'restart'
 
-function withToast(op: ReturnType<typeof useStreamOperation>, label: string) {
-  return async (streamFn: Parameters<ReturnType<typeof useStreamOperation>['execute']>[0]) => {
-    await op.execute(streamFn)
-    if (op.error.value) {
-      toast.error(`${label} failed`, { description: op.error.value })
-    } else {
-      toast.success(`${label} completed`)
-    }
-  }
-}
+const groups = new Map<string, ReturnType<typeof createGroup>>()
 
-function createServerOps(projectName: string, serverName: string) {
+function createGroup(projectName: string, serverName: string) {
   const client = useOreClient()
-  const start = useStreamOperation()
-  const stop = useStreamOperation()
-  const restart = useStreamOperation()
 
-  const anyRunning = computed(
-    () => start.running.value || stop.running.value || restart.running.value,
-  )
+  const group = createOperationGroup<Action>({
+    actions: ['start', 'stop', 'restart'],
+    labels: {
+      start: `Start ${serverName}`,
+      stop: `Stop ${serverName}`,
+      restart: `Restart ${serverName}`,
+    },
+    project: projectName,
+    target: serverName,
+    trigger: (action, signal) => {
+      const server = client.projects.get(projectName).servers.get(serverName)
+      return server[action]({ signal })
+    },
+  })
 
-  const runStart = withToast(start, `Start ${serverName}`)
-  const runStop = withToast(stop, `Stop ${serverName}`)
-  const runRestart = withToast(restart, `Restart ${serverName}`)
-
-  function handleStart() {
-    runStart((signal) => client.projects.get(projectName).servers.get(serverName).start({ signal }))
+  return {
+    start: group.streams.start,
+    stop: group.streams.stop,
+    restart: group.streams.restart,
+    anyRunning: group.anyRunning,
+    handleStart: () => group.handle('start'),
+    handleStop: () => group.handle('stop'),
+    handleRestart: () => group.handle('restart'),
   }
-
-  function handleStop() {
-    runStop((signal) => client.projects.get(projectName).servers.get(serverName).stop({ signal }))
-  }
-
-  function handleRestart() {
-    runRestart((signal) =>
-      client.projects.get(projectName).servers.get(serverName).restart({ signal }),
-    )
-  }
-
-  return { start, stop, restart, anyRunning, handleStart, handleStop, handleRestart }
 }
 
 export function useServerOperations(projectName: MaybeRef<string>, serverName: MaybeRef<string>) {
   const key = `${toValue(projectName)}/${toValue(serverName)}`
-  let ops = serverOpsMap.get(key)
+  let ops = groups.get(key)
   if (!ops) {
-    ops = createServerOps(toValue(projectName), toValue(serverName))
-    serverOpsMap.set(key, ops)
+    ops = createGroup(toValue(projectName), toValue(serverName))
+    groups.set(key, ops)
   }
   return ops
 }

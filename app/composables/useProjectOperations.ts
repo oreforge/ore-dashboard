@@ -1,85 +1,69 @@
-import type { BuildRequest, CleanRequest, UpRequest } from '@oreforge/sdk'
-import { toast } from 'vue-sonner'
+import type { BuildRequest, CleanRequest, OperationResponse, UpRequest } from '@oreforge/sdk'
+import { createOperationGroup } from './internal/createOperationGroup'
 
-const operationsMap = new Map<string, ReturnType<typeof createOperations>>()
+type Action = 'up' | 'down' | 'build' | 'update' | 'clean'
 
-function withToast(op: ReturnType<typeof useStreamOperation>, label: string) {
-  return async (streamFn: Parameters<ReturnType<typeof useStreamOperation>['execute']>[0]) => {
-    await op.execute(streamFn)
-    if (op.error.value) {
-      toast.error(`${label} failed`, { description: op.error.value })
-    } else {
-      toast.success(`${label} completed`)
-    }
-  }
+const LABELS: Record<Action, string> = {
+  up: 'Up',
+  down: 'Down',
+  build: 'Build',
+  update: 'Update',
+  clean: 'Clean',
 }
 
-function createOperations(projectName: string) {
+const groups = new Map<string, ReturnType<typeof createGroup>>()
+
+function createGroup(projectName: string) {
   const client = useOreClient()
-  const up = useStreamOperation()
-  const down = useStreamOperation()
-  const build = useStreamOperation()
-  const update = useStreamOperation()
-  const clean = useStreamOperation()
 
-  const anyRunning = computed(
-    () =>
-      up.running.value ||
-      down.running.value ||
-      build.running.value ||
-      update.running.value ||
-      clean.running.value,
-  )
-
-  const runUp = withToast(up, 'Up')
-  const runDown = withToast(down, 'Down')
-  const runBuild = withToast(build, 'Build')
-  const runUpdate = withToast(update, 'Update')
-  const runClean = withToast(clean, 'Clean')
-
-  function handleUp(opts?: UpRequest) {
-    runUp((signal) =>
-      client.projects
-        .get(projectName)
-        .up({ no_cache: opts?.no_cache, force: opts?.force }, { signal }),
-    )
-  }
-  function handleDown() {
-    runDown((signal) => client.projects.get(projectName).down({ signal }))
-  }
-  function handleBuild(opts?: BuildRequest) {
-    runBuild((signal) =>
-      client.projects.get(projectName).build({ no_cache: opts?.no_cache }, { signal }),
-    )
-  }
-  function handleUpdate() {
-    runUpdate((signal) => client.projects.update(projectName, { signal }))
-  }
-  function handleClean(target: CleanRequest['target'] = 'all') {
-    runClean((signal) => client.projects.get(projectName).clean({ target }, { signal }))
-  }
+  const group = createOperationGroup<Action>({
+    actions: ['up', 'down', 'build', 'update', 'clean'],
+    labels: LABELS,
+    project: projectName,
+    trigger: (action, signal, args): Promise<OperationResponse> => {
+      const project = client.projects.get(projectName)
+      switch (action) {
+        case 'up': {
+          const opts = (args ?? {}) as UpRequest
+          return project.up({ no_cache: opts.no_cache, force: opts.force }, { signal })
+        }
+        case 'down':
+          return project.down({ signal })
+        case 'build': {
+          const opts = (args ?? {}) as BuildRequest
+          return project.build({ no_cache: opts.no_cache }, { signal })
+        }
+        case 'update':
+          return client.projects.update(projectName, { signal })
+        case 'clean': {
+          const target = (args as CleanRequest['target']) ?? 'all'
+          return project.clean({ target }, { signal })
+        }
+      }
+    },
+  })
 
   return {
-    up,
-    down,
-    build,
-    update,
-    clean,
-    anyRunning,
-    handleUp,
-    handleDown,
-    handleBuild,
-    handleUpdate,
-    handleClean,
+    up: group.streams.up,
+    down: group.streams.down,
+    build: group.streams.build,
+    update: group.streams.update,
+    clean: group.streams.clean,
+    anyRunning: group.anyRunning,
+    handleUp: (opts?: UpRequest) => group.handle('up', opts),
+    handleDown: () => group.handle('down'),
+    handleBuild: (opts?: BuildRequest) => group.handle('build', opts),
+    handleUpdate: () => group.handle('update'),
+    handleClean: (target: CleanRequest['target'] = 'all') => group.handle('clean', target),
   }
 }
 
 export function useProjectOperations(projectName: MaybeRef<string>) {
   const name = toValue(projectName)
-  let ops = operationsMap.get(name)
+  let ops = groups.get(name)
   if (!ops) {
-    ops = createOperations(name)
-    operationsMap.set(name, ops)
+    ops = createGroup(name)
+    groups.set(name, ops)
   }
   return ops
 }

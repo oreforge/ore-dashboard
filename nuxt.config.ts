@@ -32,6 +32,7 @@ export default defineNuxtConfig({
         '@oreforge/sdk',
         '@xterm/addon-fit',
         '@xterm/xterm',
+        '@tanstack/vue-table',
       ],
     },
   },
@@ -44,7 +45,7 @@ export default defineNuxtConfig({
   imports: {
     dirs: ['types'],
   },
-  modules: ['shadcn-nuxt'],
+  modules: ['shadcn-nuxt', '@pinia/nuxt'],
   shadcn: {
     prefix: '',
     componentDir: '@/components/ui',
