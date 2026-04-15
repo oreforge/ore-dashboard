@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import type { ServerStatus } from '@oreforge/sdk'
-import { Loader2Icon, TerminalIcon } from 'lucide-vue-next'
+import { TerminalIcon } from 'lucide-vue-next'
 
 const route = useRoute()
 const name = computed(() => route.params.name as string)
@@ -18,18 +18,6 @@ const allServers = computed<ServerStatus[]>(() => {
 
 const selectedServer = ref('')
 const terminalRef = ref<InstanceType<typeof ConsoleTerminal> | null>(null)
-
-const connectionLabel = computed(() => {
-  if (terminalRef.value?.connecting) return 'Connecting'
-  if (terminalRef.value?.connected) return 'Connected'
-  return 'Disconnected'
-})
-
-const connectionDot = computed(() => {
-  if (terminalRef.value?.connecting) return 'bg-yellow-500'
-  if (terminalRef.value?.connected) return 'bg-emerald-500'
-  return 'bg-muted-foreground/50'
-})
 
 watch(
   allServers,
@@ -49,24 +37,21 @@ watch(
       <p class="mt-0.5 text-sm text-muted-foreground">{{ name }}</p>
     </div>
 
-    <div
-      v-if="allServers.length === 0"
-      class="flex flex-1 flex-col items-center justify-center rounded-xl border border-dashed py-16"
-    >
-      <div class="flex size-14 items-center justify-center rounded-full bg-muted">
-        <TerminalIcon class="size-6 text-muted-foreground" />
-      </div>
-      <h2 class="mt-4 text-base font-semibold">No servers available</h2>
-      <p class="mt-1 text-sm text-muted-foreground">
-        Start the project first to access the console.
-      </p>
-    </div>
+    <Empty v-if="allServers.length === 0" class="flex-1 border border-dashed">
+      <EmptyHeader>
+        <EmptyMedia variant="icon">
+          <TerminalIcon />
+        </EmptyMedia>
+        <EmptyTitle>No servers available</EmptyTitle>
+        <EmptyDescription>Start the project first to access the console.</EmptyDescription>
+      </EmptyHeader>
+    </Empty>
 
     <div v-else class="flex min-h-0 flex-1 flex-col gap-4">
-      <div class="flex shrink-0 items-center gap-3">
-        <label class="text-sm font-medium">Server</label>
+      <Field orientation="horizontal" class="shrink-0">
+        <FieldLabel for="console-server-select">Server</FieldLabel>
         <Select v-model="selectedServer">
-          <SelectTrigger class="w-[220px]">
+          <SelectTrigger id="console-server-select" class="w-[220px]">
             <SelectValue placeholder="Select server" />
           </SelectTrigger>
           <SelectContent>
@@ -79,12 +64,7 @@ watch(
             </SelectItem>
           </SelectContent>
         </Select>
-        <div v-if="selectedServer" class="flex items-center gap-1.5 text-xs text-muted-foreground">
-          <Loader2Icon v-if="terminalRef?.connecting" class="size-3 animate-spin" />
-          <span v-else class="inline-block size-2 rounded-full" :class="connectionDot" />
-          {{ connectionLabel }}
-        </div>
-      </div>
+      </Field>
       <ConsoleTerminal
         v-if="selectedServer"
         ref="terminalRef"

@@ -1,5 +1,5 @@
 import type { NetworkStatus } from '@oreforge/sdk'
-import type { Ref } from 'vue'
+import type { ComputedRef } from 'vue'
 
 export interface ProjectEntry {
   name: string
@@ -9,8 +9,8 @@ export interface ProjectEntry {
 }
 
 export interface ProjectStatusContext {
-  status: Ref<NetworkStatus | null>
-  loading: Ref<boolean>
-  error: Ref<string | null>
-  fetchedAt: Ref<number>
+  status: ComputedRef<NetworkStatus | null>
+  loading: ComputedRef<boolean>
+  error: ComputedRef<string | null>
+  fetchedAt: ComputedRef<number>
 }

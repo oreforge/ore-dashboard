@@ -1,6 +1,7 @@
 import type { OreConsole } from '@oreforge/sdk'
 import { FitAddon } from '@xterm/addon-fit'
 import { Terminal } from '@xterm/xterm'
+import { useConsoleStore } from '~/stores/console'
 
 let colorCtx: CanvasRenderingContext2D | null = null
 
@@ -12,22 +13,38 @@ function resolveColor(el: HTMLElement): string {
 }
 
 export function useConsole(projectName: MaybeRef<string>, serverName: MaybeRef<string>) {
+  const store = useConsoleStore()
   const terminalRef = ref<HTMLElement | null>(null)
-  const connecting = ref(false)
-  const connected = ref(false)
-  const error = ref<string | null>(null)
+
+  const project = computed(() => toValue(projectName))
+  const server = computed(() => toValue(serverName))
+  const session = computed(() => store.get(project.value, server.value))
 
   let terminal: Terminal | null = null
   let fitAddon: FitAddon | null = null
   let oreConsole: OreConsole | null = null
+  let resizeBound = false
+
   function fit() {
     fitAddon?.fit()
+  }
+
+  function bindResize() {
+    if (resizeBound) return
+    window.addEventListener('resize', fit)
+    resizeBound = true
+  }
+
+  function unbindResize() {
+    if (!resizeBound) return
+    window.removeEventListener('resize', fit)
+    resizeBound = false
   }
 
   function connect() {
     if (!terminalRef.value) return
     disconnect()
-    connecting.value = true
+    store.upsert(project.value, server.value, { state: 'connecting', error: null })
 
     const bg = resolveColor(terminalRef.value)
 
@@ -45,8 +62,8 @@ export function useConsole(projectName: MaybeRef<string>, serverName: MaybeRef<s
     fitAddon.fit()
 
     const client = useOreClient()
-    oreConsole = client.projects.get(toValue(projectName)).console({
-      server: toValue(serverName),
+    oreConsole = client.projects.get(project.value).console({
+      server: server.value,
       cols: terminal.cols,
       rows: terminal.rows,
     })
@@ -56,40 +73,56 @@ export function useConsole(projectName: MaybeRef<string>, serverName: MaybeRef<s
     })
 
     oreConsole.onData((data) => {
-      connecting.value = false
-      connected.value = true
+      store.upsert(project.value, server.value, { state: 'connected', error: null })
       terminal?.write(data)
     })
     oreConsole.onClose(() => {
-      connecting.value = false
-      connected.value = false
+      store.upsert(project.value, server.value, { state: 'disconnected' })
     })
     oreConsole.onError((e) => {
-      error.value = e.message
-      connecting.value = false
-      connected.value = false
+      store.upsert(project.value, server.value, { state: 'error', error: e.message })
     })
 
     queueMicrotask(() => {
       terminal?.onData((data) => oreConsole?.write(new TextEncoder().encode(data)))
     })
 
-    window.addEventListener('resize', fit)
+    bindResize()
   }
 
   function disconnect() {
-    window.removeEventListener('resize', fit)
+    unbindResize()
     oreConsole?.close()
     oreConsole = null
     terminal?.dispose()
     terminal = null
     fitAddon = null
-    connecting.value = false
-    connected.value = false
-    error.value = null
+    if (store.get(project.value, server.value).state !== 'error') {
+      store.upsert(project.value, server.value, { state: 'idle', error: null })
+    }
   }
 
-  onUnmounted(disconnect)
+  function reconnect() {
+    disconnect()
+    nextTick(connect)
+  }
 
-  return { terminalRef, connecting, connected, error, connect, disconnect, fit }
+  onScopeDispose(disconnect)
+
+  const state = computed(() => session.value.state)
+  const error = computed(() => session.value.error)
+  const connecting = computed(() => state.value === 'connecting')
+  const connected = computed(() => state.value === 'connected')
+
+  return {
+    terminalRef,
+    state,
+    error,
+    connecting,
+    connected,
+    connect,
+    disconnect,
+    reconnect,
+    fit,
+  }
 }

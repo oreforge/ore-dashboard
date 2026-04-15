@@ -1,7 +1,5 @@
 <script setup lang="ts">
-import type { WebhookInfoResponse } from '@oreforge/sdk'
-import { OreApiError } from '@oreforge/sdk'
-import { CopyIcon, Loader2Icon, WebhookIcon } from 'lucide-vue-next'
+import { CopyIcon, WebhookIcon, WebhookOffIcon } from 'lucide-vue-next'
 import { toast } from 'vue-sonner'
 
 const route = useRoute()
@@ -10,39 +8,21 @@ const name = computed(() => route.params.name as string)
 
 useHead({ title: computed(() => `Settings — ${name.value}`) })
 
-const client = useOreClient()
-
-const webhook = ref<WebhookInfoResponse | null>(null)
-const webhookLoading = ref(true)
+const {
+  info: webhook,
+  loading: webhookLoading,
+  refresh: fetchWebhook,
+  trigger: triggerWebhookCall,
+} = useWebhooks(name)
 const triggering = ref(false)
 
-const webhookUrl = computed(() => {
-  return webhook.value?.url ?? ''
-})
-
-async function fetchWebhook() {
-  webhookLoading.value = true
-  try {
-    webhook.value = await client.projects.get(name.value).webhookInfo()
-  } catch (e) {
-    toast.error(e instanceof Error ? e.message : 'Failed to load webhook info')
-  } finally {
-    webhookLoading.value = false
-  }
-}
+const webhookUrl = computed(() => webhook.value?.url ?? '')
 
 async function triggerWebhook() {
   if (!webhook.value?.secret) return
   triggering.value = true
   try {
-    await client.webhook.trigger(name.value, { secret: webhook.value.secret })
-    toast.success('Webhook triggered successfully')
-  } catch (e) {
-    if (e instanceof OreApiError) {
-      toast.error(`HTTP ${e.status}: ${String(e.detail)}`)
-    } else {
-      toast.error(e instanceof Error ? e.message : 'Failed to trigger webhook')
-    }
+    await triggerWebhookCall()
   } finally {
     triggering.value = false
   }
@@ -99,47 +79,48 @@ async function handleRemove() {
             <Skeleton class="size-9 shrink-0" />
           </div>
 
-          <div v-else-if="webhook && !webhook.enabled" class="text-sm text-muted-foreground">
-            Webhooks are not enabled for this project.
-          </div>
+          <Empty v-else-if="!webhook || !webhook.enabled" class="py-8">
+            <EmptyHeader>
+              <EmptyMedia variant="icon">
+                <WebhookOffIcon />
+              </EmptyMedia>
+              <EmptyTitle>Webhook disabled</EmptyTitle>
+              <EmptyDescription>
+                Webhooks are not enabled for this project.
+              </EmptyDescription>
+            </EmptyHeader>
+          </Empty>
 
-          <div v-else-if="webhook" class="space-y-4">
-            <div class="flex gap-2">
-              <Input
-                :model-value="webhookUrl"
-                readonly
-                class="font-mono text-xs"
-              />
+          <InputGroup v-else>
+            <InputGroupInput
+              :model-value="webhookUrl"
+              readonly
+              class="font-mono text-xs"
+            />
+            <InputGroupAddon align="inline-end">
               <Tooltip>
                 <TooltipTrigger as-child>
-                  <Button
-                    variant="outline"
-                    size="icon"
-                    class="shrink-0"
-                    @click="copyToClipboard(webhookUrl)"
-                  >
-                    <CopyIcon class="size-3.5" />
-                  </Button>
+                  <InputGroupButton size="icon-sm" @click="copyToClipboard(webhookUrl)">
+                    <CopyIcon />
+                  </InputGroupButton>
                 </TooltipTrigger>
                 <TooltipContent>Copy URL</TooltipContent>
               </Tooltip>
               <Tooltip>
                 <TooltipTrigger as-child>
-                  <Button
-                    size="icon"
-                    variant="secondary"
-                    class="shrink-0"
+                  <InputGroupButton
+                    size="icon-sm"
                     :disabled="triggering || !webhook.secret"
                     @click="triggerWebhook"
                   >
-                    <Loader2Icon v-if="triggering" class="size-3.5 animate-spin" />
-                    <WebhookIcon v-else class="size-3.5" />
-                  </Button>
+                    <Spinner v-if="triggering" />
+                    <WebhookIcon v-else />
+                  </InputGroupButton>
                 </TooltipTrigger>
                 <TooltipContent>Trigger webhook</TooltipContent>
               </Tooltip>
-            </div>
-          </div>
+            </InputGroupAddon>
+          </InputGroup>
         </CardContent>
       </Card>
 
@@ -171,7 +152,7 @@ async function handleRemove() {
         <DialogFooter>
           <Button variant="outline" @click="showConfirm = false">Cancel</Button>
           <Button variant="destructive" :disabled="removing" @click="handleRemove">
-            <Loader2Icon v-if="removing" class="mr-1.5 size-4 animate-spin" />
+            <Spinner v-if="removing" class="mr-1.5" />
             Delete
           </Button>
         </DialogFooter>

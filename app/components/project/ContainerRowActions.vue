@@ -1,12 +1,6 @@
 <script setup lang="ts">
 import type { ContainerState } from '@oreforge/sdk'
-import {
-  Loader2Icon,
-  MoreHorizontalIcon,
-  PlayIcon,
-  RefreshCwIcon,
-  SquareIcon,
-} from 'lucide-vue-next'
+import { MoreHorizontalIcon, PlayIcon, RefreshCwIcon, SquareIcon } from 'lucide-vue-next'
 
 const props = defineProps<{
   projectName: string
@@ -38,7 +32,7 @@ const isRunning = computed(() => props.containerState === 'running')
         :disabled="isRunning || ops.anyRunning.value"
         @click="ops.handleStart()"
       >
-        <Loader2Icon v-if="ops.start.running.value" class="mr-2 size-4 animate-spin" />
+        <Spinner v-if="ops.start.running.value" class="mr-2" />
         <PlayIcon v-else class="mr-2 size-4" />
         Start
       </DropdownMenuItem>
@@ -46,7 +40,7 @@ const isRunning = computed(() => props.containerState === 'running')
         :disabled="!isRunning || ops.anyRunning.value"
         @click="ops.handleStop()"
       >
-        <Loader2Icon v-if="ops.stop.running.value" class="mr-2 size-4 animate-spin" />
+        <Spinner v-if="ops.stop.running.value" class="mr-2" />
         <SquareIcon v-else class="mr-2 size-4" />
         Stop
       </DropdownMenuItem>
@@ -54,7 +48,7 @@ const isRunning = computed(() => props.containerState === 'running')
         :disabled="!isRunning || ops.anyRunning.value"
         @click="ops.handleRestart()"
       >
-        <Loader2Icon v-if="ops.restart.running.value" class="mr-2 size-4 animate-spin" />
+        <Spinner v-if="ops.restart.running.value" class="mr-2" />
         <RefreshCwIcon v-else class="mr-2 size-4" />
         Restart
       </DropdownMenuItem>

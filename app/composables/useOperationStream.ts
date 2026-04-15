@@ -1,17 +1,14 @@
-import {
-  type OperationResponse,
-  OreApiError,
-  OreConnectionError,
-  OreStreamError,
-} from '@oreforge/sdk'
+import type { OperationResponse } from '@oreforge/sdk'
+import { useOperationsStore } from '~/stores/operations'
+import { parseOreError } from '~/utils/parseOreError'
 
 const TERMINAL_STATUSES = new Set(['completed', 'failed', 'cancelled'])
 
-export function useStreamOperation() {
+export function useOperationStream() {
+  const store = useOperationsStore()
   const running = ref(false)
   const error = ref<string | null>(null)
   const operationId = ref<string | null>(null)
-
   let controller: AbortController | null = null
 
   async function execute(trigger: (signal: AbortSignal) => Promise<OperationResponse>) {
@@ -26,9 +23,11 @@ export function useStreamOperation() {
     try {
       const op = await client.operations.get(id).get({ signal: ctrl.signal })
       if (TERMINAL_STATUSES.has(op.status)) {
+        store.remove(id)
         if (op.status === 'failed' && op.error) error.value = op.error
         return
       }
+      store.upsert(op)
       await run(async () => op, ctrl)
     } catch (e) {
       setError(e)
@@ -47,10 +46,23 @@ export function useStreamOperation() {
     try {
       const op = await kickoff(ctrl.signal)
       operationId.value = op.id
+      store.upsert(op)
       const logs = client.operations.get(op.id).logs(0, { signal: ctrl.signal })
       await logs.drain()
+      try {
+        const final = await client.operations.get(op.id).get({ signal: ctrl.signal })
+        if (TERMINAL_STATUSES.has(final.status)) {
+          if (final.status === 'failed' && final.error) error.value = final.error
+          store.remove(op.id)
+        } else {
+          store.upsert(final)
+        }
+      } catch {
+        store.remove(op.id)
+      }
     } catch (e) {
       setError(e)
+      if (operationId.value) store.remove(operationId.value)
     } finally {
       if (controller === ctrl) controller = null
       running.value = false
@@ -58,15 +70,8 @@ export function useStreamOperation() {
   }
 
   function setError(e: unknown) {
-    if (e instanceof OreStreamError) {
-      error.value = e.line.error ?? e.message
-    } else if (e instanceof OreApiError) {
-      error.value = `HTTP ${e.status}: ${String(e.detail)}`
-    } else if (e instanceof OreConnectionError) {
-      error.value = 'Unable to reach the server. Check your connection.'
-    } else if (e instanceof Error && e.name !== 'AbortError') {
-      error.value = e.message
-    }
+    if (e instanceof Error && e.name === 'AbortError') return
+    error.value = parseOreError(e)
   }
 
   async function cancel() {
@@ -79,7 +84,7 @@ export function useStreamOperation() {
     try {
       await client.operations.get(id).cancel()
     } catch (e) {
-      if (e instanceof Error) error.value = e.message
+      error.value = parseOreError(e)
     }
   }
 

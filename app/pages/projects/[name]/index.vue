@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ActivityIcon, HeartPulseIcon, NetworkIcon, PlayIcon, ServerIcon } from 'lucide-vue-next'
-import { createServerColumns } from '~/components/project/server-columns'
-import { createServiceColumns } from '~/components/project/service-columns'
+import { createServerColumns, type ServerRow } from '~/components/project/server-columns'
+import { createServiceColumns, type ServiceRow } from '~/components/project/service-columns'
 import { aggregateStateClass, getAggregateState } from '~/utils/status-colors'
 
 const route = useRoute()
@@ -10,6 +10,7 @@ const name = computed(() => route.params.name as string)
 const projectStatus = inject<ProjectStatusContext>('projectStatus')
 if (!projectStatus) throw new Error('projectStatus not provided')
 const { status, loading, fetchedAt } = projectStatus
+const { refresh: refreshStatus } = useProjectStatus(name)
 
 const serverCount = computed(() => status.value?.servers.length ?? 0)
 const serviceCount = computed(() => status.value?.services?.length ?? 0)
@@ -24,6 +25,7 @@ const ops = useProjectOperations(() => name.value)
 
 const serverColumns = createServerColumns(() => name.value, fetchedAt)
 const serviceColumns = createServiceColumns(() => name.value, fetchedAt)
+const serverColCount = computed(() => serverColumns.length)
 </script>
 
 <template>
@@ -49,7 +51,11 @@ const serviceColumns = createServiceColumns(() => name.value, fetchedAt)
           <p v-if="status" class="mt-0.5 text-sm text-muted-foreground">{{ status.network }}</p>
         </template>
       </div>
-      <ProjectActionBar v-if="!loading" :project-name="name" />
+      <div class="flex items-center gap-3">
+        <LastUpdated v-if="fetchedAt" :fetched-at="fetchedAt" />
+        <RefreshButton :refresh="refreshStatus" />
+        <ProjectActionBar v-if="!loading" :project-name="name" />
+      </div>
     </div>
 
     <div v-if="loading" class="space-y-6">
@@ -65,12 +71,12 @@ const serviceColumns = createServiceColumns(() => name.value, fetchedAt)
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead v-for="i in 6" :key="i"><Skeleton class="h-4 w-16" /></TableHead>
+              <TableHead v-for="i in serverColCount" :key="i"><Skeleton class="h-4 w-16" /></TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             <TableRow v-for="i in 3" :key="i">
-              <TableCell v-for="j in 6" :key="j" class="h-12"><Skeleton class="h-4 w-20" /></TableCell>
+              <TableCell v-for="j in serverColCount" :key="j" class="h-12"><Skeleton class="h-4 w-20" /></TableCell>
             </TableRow>
           </TableBody>
         </Table>
@@ -117,30 +123,32 @@ const serviceColumns = createServiceColumns(() => name.value, fetchedAt)
     </div>
 
     <template v-if="!loading && status">
-      <div v-if="status.servers.length === 0" class="flex flex-col items-center justify-center rounded-xl border border-dashed py-16">
-        <div class="flex size-14 items-center justify-center rounded-full bg-muted">
-          <ServerIcon class="size-6 text-muted-foreground" />
-        </div>
-        <h2 class="mt-4 text-base font-semibold">No servers running</h2>
-        <p class="mt-1 text-sm text-muted-foreground">
-          Start the project to bring up your servers.
-        </p>
-        <Button class="mt-5" variant="outline" :disabled="ops.anyRunning.value" @click="ops.handleUp()">
-          <PlayIcon class="mr-1.5 size-4" />
-          Start project
-        </Button>
-      </div>
+      <Empty v-if="status.servers.length === 0" class="border border-dashed">
+        <EmptyHeader>
+          <EmptyMedia variant="icon">
+            <ServerIcon />
+          </EmptyMedia>
+          <EmptyTitle>No servers running</EmptyTitle>
+          <EmptyDescription>Start the project to bring up your servers.</EmptyDescription>
+        </EmptyHeader>
+        <EmptyContent>
+          <Button variant="outline" :disabled="ops.anyRunning.value" @click="ops.handleUp()">
+            <PlayIcon class="mr-1.5 size-4" />
+            Start project
+          </Button>
+        </EmptyContent>
+      </Empty>
 
       <div v-else class="space-y-8">
         <div>
-          <h2 class="mb-3 flex items-center gap-1.5 text-sm font-medium uppercase tracking-wider text-muted-foreground">
-            <ServerIcon class="size-3.5" /> Servers
-            <span class="text-muted-foreground/60">({{ serverCount }})</span>
+          <h2 class="mb-3 flex items-center gap-2 border-b border-border/50 pb-2 text-sm font-medium text-foreground/90">
+            <ServerIcon class="size-3.5 text-muted-foreground" /> Servers
+            <span class="text-muted-foreground">({{ serverCount }})</span>
           </h2>
           <ProjectDataTable
             :columns="serverColumns"
             :data="status.servers"
-            :get-row-id="(row: any) => row.name"
+            :get-row-id="(row: ServerRow) => row.name"
           >
             <template #toolbar="{ table }">
               <ProjectContainerTableToolbar :table="table" :project-name="name" type="server" />
@@ -149,14 +157,14 @@ const serviceColumns = createServiceColumns(() => name.value, fetchedAt)
         </div>
 
         <div v-if="status.services && status.services.length > 0">
-          <h2 class="mb-3 flex items-center gap-1.5 text-sm font-medium uppercase tracking-wider text-muted-foreground">
-            <NetworkIcon class="size-3.5" /> Services
-            <span class="text-muted-foreground/60">({{ serviceCount }})</span>
+          <h2 class="mb-3 flex items-center gap-2 border-b border-border/50 pb-2 text-sm font-medium text-foreground/90">
+            <NetworkIcon class="size-3.5 text-muted-foreground" /> Services
+            <span class="text-muted-foreground">({{ serviceCount }})</span>
           </h2>
           <ProjectDataTable
             :columns="serviceColumns"
             :data="status.services ?? []"
-            :get-row-id="(row: any) => row.name"
+            :get-row-id="(row: ServiceRow) => row.name"
           >
             <template #toolbar="{ table }">
               <ProjectContainerTableToolbar :table="table" :project-name="name" type="service" />

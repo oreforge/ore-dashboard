@@ -2,7 +2,6 @@
 import {
   ChevronDownIcon,
   HammerIcon,
-  Loader2Icon,
   PlayIcon,
   RefreshCwIcon,
   SquareIcon,
@@ -48,120 +47,94 @@ function executeConfirmed() {
 <template>
   <div>
     <div class="flex flex-wrap items-center gap-2">
-      <div class="flex items-center">
-        <Button
-          size="sm"
-          class="rounded-r-none"
-          :disabled="ops.anyRunning.value"
-          @click="ops.handleUp()"
-        >
-          <Loader2Icon v-if="ops.up.running.value" class="mr-1.5 size-3.5 animate-spin" />
+      <ButtonGroup>
+        <Button size="sm" :disabled="ops.anyRunning.value" @click="ops.handleUp()">
+          <Spinner v-if="ops.up.running.value" class="mr-1.5" />
           <PlayIcon v-else class="mr-1.5 size-3.5" />
           Up
         </Button>
         <Popover v-model:open="upOpen">
           <PopoverTrigger as-child>
-            <Button
-              size="sm"
-              class="rounded-l-none border-l border-l-background/20 px-1.5"
-              :disabled="ops.anyRunning.value"
-            >
+            <Button size="sm" class="px-1.5" :disabled="ops.anyRunning.value">
               <ChevronDownIcon class="size-3.5" />
             </Button>
           </PopoverTrigger>
           <PopoverContent align="start" class="w-56 p-3">
-            <div class="space-y-3">
+            <FieldGroup>
               <p class="text-xs font-medium text-muted-foreground">Start options</p>
-              <label class="flex items-center justify-between">
-                <span class="text-sm">No cache</span>
-                <Switch v-model="upNoCache" />
-              </label>
-              <label class="flex items-center justify-between">
-                <span class="text-sm">Force recreate</span>
-                <Switch v-model="upForce" />
-              </label>
+              <Field orientation="horizontal">
+                <FieldLabel for="up-no-cache">No cache</FieldLabel>
+                <Switch id="up-no-cache" v-model="upNoCache" />
+              </Field>
+              <Field orientation="horizontal">
+                <FieldLabel for="up-force">Force recreate</FieldLabel>
+                <Switch id="up-force" v-model="upForce" />
+              </Field>
               <Button size="sm" class="w-full" :disabled="ops.anyRunning.value" @click="runUp">
                 <PlayIcon class="mr-1.5 size-3.5" />
                 Start
               </Button>
-            </div>
+            </FieldGroup>
           </PopoverContent>
         </Popover>
-      </div>
+      </ButtonGroup>
 
       <Button size="sm" variant="outline" :disabled="ops.anyRunning.value" @click="ops.handleDown()">
-        <Loader2Icon v-if="ops.down.running.value" class="mr-1.5 size-3.5 animate-spin" />
+        <Spinner v-if="ops.down.running.value" class="mr-1.5" />
         <SquareIcon v-else class="mr-1.5 size-3.5" />
         Down
       </Button>
 
-      <div class="flex items-center">
-        <Button
-          size="sm"
-          variant="outline"
-          class="rounded-r-none"
-          :disabled="ops.anyRunning.value"
-          @click="ops.handleBuild()"
-        >
-          <Loader2Icon v-if="ops.build.running.value" class="mr-1.5 size-3.5 animate-spin" />
+      <ButtonGroup>
+        <Button size="sm" variant="outline" :disabled="ops.anyRunning.value" @click="ops.handleBuild()">
+          <Spinner v-if="ops.build.running.value" class="mr-1.5" />
           <HammerIcon v-else class="mr-1.5 size-3.5" />
           Build
         </Button>
         <Popover v-model:open="buildOpen">
           <PopoverTrigger as-child>
-            <Button
-              size="sm"
-              variant="outline"
-              class="rounded-l-none border-l-0 px-1.5"
-              :disabled="ops.anyRunning.value"
-            >
+            <Button size="sm" variant="outline" class="px-1.5" :disabled="ops.anyRunning.value">
               <ChevronDownIcon class="size-3.5" />
             </Button>
           </PopoverTrigger>
           <PopoverContent align="start" class="w-56 p-3">
-            <div class="space-y-3">
+            <FieldGroup>
               <p class="text-xs font-medium text-muted-foreground">Build options</p>
-              <label class="flex items-center justify-between">
-                <span class="text-sm">No cache</span>
-                <Switch v-model="buildNoCache" />
-              </label>
+              <Field orientation="horizontal">
+                <FieldLabel for="build-no-cache">No cache</FieldLabel>
+                <Switch id="build-no-cache" v-model="buildNoCache" />
+              </Field>
               <Button size="sm" variant="outline" class="w-full" :disabled="ops.anyRunning.value" @click="runBuild">
                 <HammerIcon class="mr-1.5 size-3.5" />
                 Build
               </Button>
-            </div>
+            </FieldGroup>
           </PopoverContent>
         </Popover>
-      </div>
+      </ButtonGroup>
 
       <Separator orientation="vertical" class="mx-1 h-6" />
 
       <Button size="sm" variant="secondary" :disabled="ops.anyRunning.value" @click="ops.handleUpdate()">
-        <Loader2Icon v-if="ops.update.running.value" class="mr-1.5 size-3.5 animate-spin" />
+        <Spinner v-if="ops.update.running.value" class="mr-1.5" />
         <RefreshCwIcon v-else class="mr-1.5 size-3.5" />
         Update
       </Button>
 
-      <div class="flex items-center">
+      <ButtonGroup>
         <Button
           size="sm"
           variant="destructive"
-          class="rounded-r-none"
           :disabled="ops.anyRunning.value"
           @click="confirmAndRun('Clean all', () => ops.handleClean())"
         >
-          <Loader2Icon v-if="ops.clean.running.value" class="mr-1.5 size-3.5 animate-spin" />
+          <Spinner v-if="ops.clean.running.value" class="mr-1.5" />
           <Trash2Icon v-else class="mr-1.5 size-3.5" />
           Clean
         </Button>
         <DropdownMenu>
           <DropdownMenuTrigger as-child>
-            <Button
-              size="sm"
-              variant="destructive"
-              class="rounded-l-none border-l border-l-background/20 px-1.5"
-              :disabled="ops.anyRunning.value"
-            >
+            <Button size="sm" variant="destructive" class="px-1.5" :disabled="ops.anyRunning.value">
               <ChevronDownIcon class="size-3.5" />
             </Button>
           </DropdownMenuTrigger>
@@ -174,8 +147,7 @@ function executeConfirmed() {
             <DropdownMenuItem @click="confirmAndRun('Clean builds', () => ops.handleClean('builds'))">Builds</DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
-      </div>
-
+      </ButtonGroup>
     </div>
 
     <Dialog :open="!!confirmAction" @update:open="confirmAction = null">

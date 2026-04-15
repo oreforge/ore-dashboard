@@ -1,59 +1,85 @@
-import { OreApiError, OreConnectionError } from '@oreforge/sdk'
 import { toast } from 'vue-sonner'
+import { usePollingSource } from '~/composables/internal/usePollingSource'
+import { PROJECT_LIST_INTERVAL } from '~/config/polling'
+import { useProjectStatusStore } from '~/stores/projectStatus'
+import { useProjectsStore } from '~/stores/projects'
 import type { ProjectEntry } from '~/types/project'
+import { parseOreError } from '~/utils/parseOreError'
 
-const projects = ref<ProjectEntry[]>([])
-const loading = ref(true)
-const error = ref<string | null>(null)
-let polling: ReturnType<typeof setInterval> | null = null
-let subscribers = 0
+let lastErrorKey: string | null = null
 
 async function fetchProjects() {
+  const store = useProjectsStore()
+  const statusStore = useProjectStatusStore()
   const client = useOreClient()
+
   try {
     const { projects: rawNames } = await client.projects.list()
     const names = rawNames ?? []
-    const entries = await Promise.allSettled(
-      names.map(async (name) => {
-        const status = await client.projects.get(name).status()
-        return { name, status, loading: false, error: null } as ProjectEntry
-      }),
-    )
-    projects.value = names.map((name, i) => {
-      const result = entries[i] as PromiseSettledResult<ProjectEntry>
-      if (result.status === 'fulfilled') return result.value
-      const reason = (result as PromiseRejectedResult).reason
-      let errorMsg = 'Failed to fetch status'
-      if (reason instanceof OreConnectionError) errorMsg = 'Unable to connect'
-      else if (reason instanceof OreApiError) errorMsg = String(reason.detail)
-      else if (reason instanceof Error) errorMsg = reason.message
-      return {
+    const settled = await Promise.allSettled(
+      names.map(async (name) => ({
         name,
-        status: null,
-        loading: false,
-        error: errorMsg,
+        status: await client.projects.get(name).status(),
+      })),
+    )
+
+    names.forEach((name, i) => {
+      const result = settled[i] as PromiseSettledResult<{
+        name: string
+        status: ProjectEntry['status']
+      }>
+      if (result.status === 'fulfilled') {
+        statusStore.upsert(name, {
+          status: result.value.status,
+          loading: false,
+          error: null,
+          fetchedAt: Date.now(),
+        })
+      } else {
+        statusStore.upsert(name, {
+          error: parseOreError(result.reason, 'Failed to fetch status'),
+          loading: false,
+        })
       }
     })
-    error.value = null
+
+    store.setNames(names)
+    store.setError(null)
+    store.setFetchedAt(Date.now())
+    lastErrorKey = null
   } catch (e) {
-    let msg: string
-    if (e instanceof OreConnectionError) {
-      msg = 'Unable to connect to the server'
-    } else if (e instanceof OreApiError) {
-      msg = String(e.detail)
-    } else {
-      msg = e instanceof Error ? e.message : String(e)
+    const msg = parseOreError(e)
+    if (lastErrorKey !== msg) {
+      toast.error(msg)
+      lastErrorKey = msg
     }
-    if (error.value !== msg) toast.error(msg)
-    error.value = msg
-    if (projects.value.length > 0) loading.value = false
-    return
+    store.setError(msg)
+  } finally {
+    useProjectsStore().setLoading(false)
   }
-  loading.value = false
 }
 
 export function useProjects() {
+  const store = useProjectsStore()
+  const statusStore = useProjectStatusStore()
   const client = useOreClient()
+
+  const { refresh } = usePollingSource('projects:list', {
+    fetcher: fetchProjects,
+    interval: PROJECT_LIST_INTERVAL,
+  })
+
+  const projects = computed<ProjectEntry[]>(() =>
+    store.names.map((name) => {
+      const entry = statusStore.get(name)
+      return {
+        name,
+        status: entry.status,
+        loading: entry.loading,
+        error: entry.error,
+      }
+    }),
+  )
 
   async function add(url: string, name?: string) {
     const result = await client.projects.add({ url, name: name || undefined })
@@ -63,24 +89,18 @@ export function useProjects() {
 
   async function remove(name: string) {
     await client.projects.remove(name)
+    statusStore.remove(name)
+    store.removeName(name)
     await fetchProjects()
   }
 
-  onMounted(() => {
-    subscribers++
-    if (subscribers === 1) {
-      fetchProjects()
-      polling = setInterval(fetchProjects, 5000)
-    }
-  })
-
-  onUnmounted(() => {
-    subscribers--
-    if (subscribers === 0 && polling) {
-      clearInterval(polling)
-      polling = null
-    }
-  })
-
-  return { projects, loading, error, refresh: fetchProjects, add, remove }
+  return {
+    projects,
+    loading: computed(() => store.loading),
+    error: computed(() => store.error),
+    fetchedAt: computed(() => store.fetchedAt),
+    refresh,
+    add,
+    remove,
+  }
 }

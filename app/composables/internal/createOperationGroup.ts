@@ -1,7 +1,10 @@
 import type { OperationResponse } from '@oreforge/sdk'
 import { toast } from 'vue-sonner'
+import { useActiveOperations } from '~/composables/useActiveOperations'
+import { useOperationStream } from '~/composables/useOperationStream'
+import { useOperationsStore } from '~/stores/operations'
 
-type StreamOp = ReturnType<typeof useStreamOperation>
+type StreamOp = ReturnType<typeof useOperationStream>
 
 export interface OperationGroupConfig<A extends string> {
   actions: readonly A[]
@@ -15,7 +18,7 @@ export function createOperationGroup<A extends string>(config: OperationGroupCon
   const scope = effectScope(true)
   const streams = scope.run(() => {
     const map = {} as Record<A, StreamOp>
-    for (const action of config.actions) map[action] = useStreamOperation()
+    for (const action of config.actions) map[action] = useOperationStream()
     return map
   }) as Record<A, StreamOp>
 
@@ -33,12 +36,12 @@ export function createOperationGroup<A extends string>(config: OperationGroupCon
     }
   }
 
-  const activeOps = useActiveOperationsStore()
-  activeOps.ensurePrimed().then(() => {
-    for (const op of activeOps.operationsFor(config.project, config.target)) {
+  const store = useOperationsStore()
+  const active = useActiveOperations()
+  active.ensurePrimed().then(() => {
+    for (const op of store.forTarget(config.project, config.target)) {
       const stream = streams[op.action as A]
       if (!stream || stream.running.value) continue
-      activeOps.claim(op.id)
       void stream.attach(op.id)
     }
   })

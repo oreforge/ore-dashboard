@@ -8,17 +8,13 @@ const { projects, loading } = useProjects()
 const route = useRoute()
 const router = useRouter()
 const { isMobile } = useSidebar()
-const client = useOreClient()
+const { iconUrl: projectIconUrl } = useProjectIcon()
 
 const activeProject = computed(() => {
   const name = route.params.name as string | undefined
   if (!name) return null
   return projects.value.find((p) => p.name === name) ?? null
 })
-
-function projectIconUrl(name: string) {
-  return client.projects.get(name).iconUrl
-}
 
 function projectInitials(name: string) {
   return name.slice(0, 2).toUpperCase()

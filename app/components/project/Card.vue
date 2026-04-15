@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Loader2Icon, PlayIcon, SquareIcon } from 'lucide-vue-next'
+import { PlayIcon, SquareIcon } from 'lucide-vue-next'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import type { ProjectEntry } from '~/types/project'
 import { aggregateStateClass, getAggregateState } from '~/utils/status-colors'
@@ -17,8 +17,8 @@ const aggregateClass = computed(() => aggregateStateClass(aggregateState.value))
 
 const ops = useProjectOperations(() => props.project.name)
 const busy = computed(() => ops.anyRunning.value)
-const client = useOreClient()
-const iconUrl = computed(() => client.projects.get(props.project.name).iconUrl)
+const { iconUrl: resolveIconUrl } = useProjectIcon()
+const iconUrl = computed(() => resolveIconUrl(props.project.name))
 const initials = computed(() => props.project.name.slice(0, 2).toUpperCase())
 
 function handleUp(e: Event) {
@@ -74,7 +74,7 @@ function handleDown(e: Event) {
                   :disabled="busy"
                   @click="handleUp"
                 >
-                  <Loader2Icon v-if="ops.up.running.value" class="size-3.5 animate-spin" />
+                  <Spinner v-if="ops.up.running.value" />
                   <PlayIcon v-else class="size-3.5" />
                 </Button>
               </TooltipTrigger>
@@ -89,7 +89,7 @@ function handleDown(e: Event) {
                   :disabled="busy"
                   @click="handleDown"
                 >
-                  <Loader2Icon v-if="ops.down.running.value" class="size-3.5 animate-spin" />
+                  <Spinner v-if="ops.down.running.value" />
                   <SquareIcon v-else class="size-3.5" />
                 </Button>
               </TooltipTrigger>

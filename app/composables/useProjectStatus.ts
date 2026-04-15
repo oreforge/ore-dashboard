@@ -1,37 +1,54 @@
-import type { NetworkStatus } from '@oreforge/sdk'
-import { OreApiError, OreConnectionError } from '@oreforge/sdk'
-import { useIntervalFn } from '@vueuse/core'
 import { toast } from 'vue-sonner'
+import { usePollingSource } from '~/composables/internal/usePollingSource'
+import { PROJECT_STATUS_INTERVAL } from '~/config/polling'
+import { useProjectStatusStore } from '~/stores/projectStatus'
+import { parseOreError } from '~/utils/parseOreError'
+
+const lastErrorByProject = new Map<string, string | null>()
 
 export function useProjectStatus(name: MaybeRef<string>) {
+  const store = useProjectStatusStore()
   const client = useOreClient()
-  const status = ref<NetworkStatus | null>(null)
-  const loading = ref(true)
-  const error = ref<string | null>(null)
-  const fetchedAt = ref<number>(0)
+  const projectName = computed(() => toValue(name))
 
   async function refresh() {
+    const key = projectName.value
+    if (!key) return
     try {
-      status.value = await client.projects.get(toValue(name)).status()
-      fetchedAt.value = Date.now()
-      error.value = null
-      loading.value = false
+      const status = await client.projects.get(key).status()
+      store.upsert(key, {
+        status,
+        loading: false,
+        error: null,
+        fetchedAt: Date.now(),
+      })
+      lastErrorByProject.set(key, null)
     } catch (e) {
-      let msg: string
-      if (e instanceof OreConnectionError) {
-        msg = 'Unable to reach the server. Check your connection.'
-      } else if (e instanceof OreApiError) {
-        msg = String(e.detail)
-      } else {
-        msg = e instanceof Error ? e.message : String(e)
+      const msg = parseOreError(e)
+      if (lastErrorByProject.get(key) !== msg) {
+        toast.error(msg)
+        lastErrorByProject.set(key, msg)
       }
-      if (error.value !== msg) toast.error(msg)
-      error.value = msg
-      if (status.value) loading.value = false
+      const current = store.get(key)
+      store.upsert(key, {
+        error: msg,
+        loading: current.status ? false : current.loading,
+      })
     }
   }
 
-  useIntervalFn(refresh, 3000, { immediateCallback: true })
+  usePollingSource(() => `projectStatus:${projectName.value}`, {
+    fetcher: refresh,
+    interval: PROJECT_STATUS_INTERVAL,
+  })
 
-  return { status, loading, error, fetchedAt, refresh }
+  const entry = computed(() => store.get(projectName.value))
+
+  return {
+    status: computed(() => entry.value.status),
+    loading: computed(() => entry.value.loading),
+    error: computed(() => entry.value.error),
+    fetchedAt: computed(() => entry.value.fetchedAt),
+    refresh,
+  }
 }

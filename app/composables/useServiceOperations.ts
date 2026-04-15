@@ -2,12 +2,10 @@ import { createOperationGroup } from './internal/createOperationGroup'
 
 type Action = 'start' | 'stop' | 'restart'
 
-const groups = new Map<string, ReturnType<typeof createGroup>>()
-
 function createGroup(projectName: string, serviceName: string) {
   const client = useOreClient()
 
-  const group = createOperationGroup<Action>({
+  return createOperationGroup<Action>({
     actions: ['start', 'stop', 'restart'],
     labels: {
       start: `Start ${serviceName}`,
@@ -21,24 +19,50 @@ function createGroup(projectName: string, serviceName: string) {
       return service[action]({ signal })
     },
   })
+}
 
+type Group = ReturnType<typeof createGroup>
+
+function streamProxy(getStream: () => Group['streams'][Action]) {
   return {
-    start: group.streams.start,
-    stop: group.streams.stop,
-    restart: group.streams.restart,
-    anyRunning: group.anyRunning,
-    handleStart: () => group.handle('start'),
-    handleStop: () => group.handle('stop'),
-    handleRestart: () => group.handle('restart'),
+    get running() {
+      return getStream().running
+    },
+    get error() {
+      return getStream().error
+    },
+    get operationId() {
+      return getStream().operationId
+    },
+    execute: (...args: Parameters<Group['streams'][Action]['execute']>) =>
+      getStream().execute(...args),
+    attach: (id: string) => getStream().attach(id),
+    cancel: () => getStream().cancel(),
   }
 }
 
 export function useServiceOperations(projectName: MaybeRef<string>, serviceName: MaybeRef<string>) {
-  const key = `${toValue(projectName)}/${toValue(serviceName)}`
-  let ops = groups.get(key)
-  if (!ops) {
-    ops = createGroup(toValue(projectName), toValue(serviceName))
-    groups.set(key, ops)
+  const project = computed(() => toValue(projectName))
+  const service = computed(() => toValue(serviceName))
+  const groupRef = shallowRef(createGroup(project.value, service.value))
+
+  watch([project, service], ([p, s], [pp, sp]) => {
+    if (p === pp && s === sp) return
+    groupRef.value.dispose()
+    groupRef.value = createGroup(p, s)
+  })
+
+  onScopeDispose(() => groupRef.value.dispose())
+
+  const group = () => groupRef.value
+
+  return {
+    start: streamProxy(() => group().streams.start),
+    stop: streamProxy(() => group().streams.stop),
+    restart: streamProxy(() => group().streams.restart),
+    anyRunning: computed(() => group().anyRunning.value),
+    handleStart: () => group().handle('start'),
+    handleStop: () => group().handle('stop'),
+    handleRestart: () => group().handle('restart'),
   }
-  return ops
 }

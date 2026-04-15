@@ -1,6 +1,6 @@
 <script setup lang="ts">
 useHead({ titleTemplate: '%s | OreForge', htmlAttrs: { class: 'dark' } })
-void useActiveOperationsStore().ensurePrimed()
+void useActiveOperations({ poll: true }).ensurePrimed()
 </script>
 
 <template>

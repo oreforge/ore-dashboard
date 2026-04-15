@@ -8,7 +8,7 @@ import LiveUptime from '~/components/project/LiveUptime.vue'
 import StatusBadge from '~/components/project/StatusBadge.vue'
 import Checkbox from '~/components/ui/checkbox/Checkbox.vue'
 
-interface ServiceRow {
+export interface ServiceRow {
   name: string
   container: {
     state: ContainerState

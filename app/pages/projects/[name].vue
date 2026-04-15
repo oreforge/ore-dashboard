@@ -6,7 +6,7 @@ useHead({ title: name })
 
 const { status, loading, error, fetchedAt } = useProjectStatus(name)
 
-await useActiveOperationsStore().ensurePrimed()
+await useActiveOperations().ensurePrimed()
 useProjectOperations(name)
 
 provide<ProjectStatusContext>('projectStatus', { status, loading, error, fetchedAt })

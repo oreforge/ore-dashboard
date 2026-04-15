@@ -38,6 +38,9 @@ const breadcrumbs = computed(() => {
             </template>
           </BreadcrumbList>
         </Breadcrumb>
+        <div class="ml-auto flex items-center gap-1">
+          <OperationsIndicator />
+        </div>
       </header>
       <main class="flex min-h-0 flex-1 flex-col p-6">
         <slot />

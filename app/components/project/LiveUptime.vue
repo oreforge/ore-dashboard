@@ -4,7 +4,7 @@ const props = defineProps<{
   fetchedAt?: number
 }>()
 
-const now = useNow()
+const { now } = useNow()
 
 const display = computed(() => {
   if (!props.uptimeNs || !props.fetchedAt) return '—'

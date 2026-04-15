@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import { Loader2Icon } from 'lucide-vue-next'
 import { toast } from 'vue-sonner'
 
 const open = defineModel<boolean>('open', { default: false })
@@ -38,35 +37,35 @@ async function handleSubmit() {
           Clone a project from a Git repository.
         </DialogDescription>
       </DialogHeader>
-      <form class="flex flex-col gap-4 pt-2" @submit.prevent="handleSubmit">
-        <div class="flex flex-col gap-1.5">
-          <label for="add-url" class="text-sm font-medium leading-none">
-            Repository URL
-          </label>
-          <Input
-            id="add-url"
-            v-model="url"
-            placeholder="https://github.com/org/repo.git"
-            required
-          />
-        </div>
-        <div class="flex flex-col gap-1.5">
-          <label for="add-name" class="text-sm font-medium leading-none">
-            Name
-            <span class="font-normal text-muted-foreground">(optional)</span>
-          </label>
-          <Input
-            id="add-name"
-            v-model="name"
-            placeholder="Auto-derived from repo name"
-          />
-        </div>
-        <DialogFooter class="pt-2">
+      <form @submit.prevent="handleSubmit">
+        <FieldGroup>
+          <Field>
+            <FieldLabel for="add-url">Repository URL</FieldLabel>
+            <Input
+              id="add-url"
+              v-model="url"
+              placeholder="https://github.com/org/repo.git"
+              required
+            />
+          </Field>
+          <Field>
+            <FieldLabel for="add-name">
+              Name
+              <span class="font-normal text-muted-foreground">(optional)</span>
+            </FieldLabel>
+            <Input
+              id="add-name"
+              v-model="name"
+              placeholder="Auto-derived from repo name"
+            />
+          </Field>
+        </FieldGroup>
+        <DialogFooter class="pt-6">
           <Button type="button" variant="outline" @click="open = false">
             Cancel
           </Button>
           <Button type="submit" :disabled="!canSubmit">
-            <Loader2Icon v-if="submitting" class="mr-1.5 size-4 animate-spin" />
+            <Spinner v-if="submitting" class="mr-1.5" />
             Add Project
           </Button>
         </DialogFooter>
