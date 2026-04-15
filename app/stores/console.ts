@@ -15,26 +15,22 @@ function sessionKey(project: string, server: string) {
   return `${project}/${server}`
 }
 
-interface ConsoleStoreState {
-  sessions: Record<string, ConsoleSession>
-}
+export const useConsoleStore = defineStore('console', () => {
+  const sessions = ref<Record<string, ConsoleSession>>({})
 
-export const useConsoleStore = defineStore('console', {
-  state: (): ConsoleStoreState => ({ sessions: {} }),
-  getters: {
-    get:
-      (state) =>
-      (project: string, server: string): ConsoleSession =>
-        state.sessions[sessionKey(project, server)] ?? emptySession(),
-  },
-  actions: {
-    upsert(project: string, server: string, patch: Partial<ConsoleSession>) {
-      const id = sessionKey(project, server)
-      const current = this.sessions[id] ?? emptySession()
-      this.sessions[id] = { ...current, ...patch }
-    },
-    remove(project: string, server: string) {
-      delete this.sessions[sessionKey(project, server)]
-    },
-  },
+  function get(project: string, server: string): ConsoleSession {
+    return sessions.value[sessionKey(project, server)] ?? emptySession()
+  }
+
+  function upsert(project: string, server: string, patch: Partial<ConsoleSession>) {
+    const id = sessionKey(project, server)
+    const current = sessions.value[id] ?? emptySession()
+    sessions.value[id] = { ...current, ...patch }
+  }
+
+  function remove(project: string, server: string) {
+    delete sessions.value[sessionKey(project, server)]
+  }
+
+  return { sessions, get, upsert, remove }
 })

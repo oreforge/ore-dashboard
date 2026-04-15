@@ -11,25 +11,21 @@ function emptyEntry(): WebhookEntry {
   return { info: null, loading: true, error: null }
 }
 
-interface WebhooksState {
-  entries: Record<string, WebhookEntry>
-}
+export const useWebhooksStore = defineStore('webhooks', () => {
+  const entries = ref<Record<string, WebhookEntry>>({})
 
-export const useWebhooksStore = defineStore('webhooks', {
-  state: (): WebhooksState => ({ entries: {} }),
-  getters: {
-    get:
-      (state) =>
-      (project: string): WebhookEntry =>
-        state.entries[project] ?? emptyEntry(),
-  },
-  actions: {
-    upsert(project: string, patch: Partial<WebhookEntry>) {
-      const current = this.entries[project] ?? emptyEntry()
-      this.entries[project] = { ...current, ...patch }
-    },
-    remove(project: string) {
-      delete this.entries[project]
-    },
-  },
+  function get(project: string): WebhookEntry {
+    return entries.value[project] ?? emptyEntry()
+  }
+
+  function upsert(project: string, patch: Partial<WebhookEntry>) {
+    const current = entries.value[project] ?? emptyEntry()
+    entries.value[project] = { ...current, ...patch }
+  }
+
+  function remove(project: string) {
+    delete entries.value[project]
+  }
+
+  return { entries, get, upsert, remove }
 })

@@ -1,35 +1,41 @@
 import { defineStore } from 'pinia'
 
-interface ProjectsState {
-  names: string[]
-  loading: boolean
-  error: string | null
-  fetchedAt: number
-}
+export const useProjectsStore = defineStore('projects', () => {
+  const names = ref<string[]>([])
+  const loading = ref(true)
+  const error = ref<string | null>(null)
+  const fetchedAt = ref(0)
 
-export const useProjectsStore = defineStore('projects', {
-  state: (): ProjectsState => ({
-    names: [],
-    loading: true,
-    error: null,
-    fetchedAt: 0,
-  }),
-  actions: {
-    setNames(names: string[]) {
-      this.names = names
-    },
-    removeName(name: string) {
-      const i = this.names.indexOf(name)
-      if (i !== -1) this.names.splice(i, 1)
-    },
-    setLoading(value: boolean) {
-      this.loading = value
-    },
-    setError(message: string | null) {
-      this.error = message
-    },
-    setFetchedAt(ts: number) {
-      this.fetchedAt = ts
-    },
-  },
+  function setNames(next: string[]) {
+    names.value = next
+  }
+
+  function removeName(name: string) {
+    const i = names.value.indexOf(name)
+    if (i !== -1) names.value.splice(i, 1)
+  }
+
+  function setLoading(value: boolean) {
+    loading.value = value
+  }
+
+  function setError(message: string | null) {
+    error.value = message
+  }
+
+  function setFetchedAt(ts: number) {
+    fetchedAt.value = ts
+  }
+
+  return {
+    names,
+    loading,
+    error,
+    fetchedAt,
+    setNames,
+    removeName,
+    setLoading,
+    setError,
+    setFetchedAt,
+  }
 })

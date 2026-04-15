@@ -1,4 +1,4 @@
-import type { OperationResponse } from '@oreforge/sdk'
+import type { OperationAction, OperationResponse } from '@oreforge/sdk'
 import { toast } from 'vue-sonner'
 import { useActiveOperations } from '~/composables/useActiveOperations'
 import { useOperationStream } from '~/composables/useOperationStream'
@@ -6,7 +6,7 @@ import { useOperationsStore } from '~/stores/operations'
 
 type StreamOp = ReturnType<typeof useOperationStream>
 
-export interface OperationGroupConfig<A extends string> {
+export interface OperationGroupConfig<A extends OperationAction> {
   actions: readonly A[]
   labels: Record<A, string>
   project: string
@@ -14,7 +14,7 @@ export interface OperationGroupConfig<A extends string> {
   trigger: (action: A, signal: AbortSignal, args?: unknown) => Promise<OperationResponse>
 }
 
-export function createOperationGroup<A extends string>(config: OperationGroupConfig<A>) {
+export function createOperationGroup<A extends OperationAction>(config: OperationGroupConfig<A>) {
   const scope = effectScope(true)
   const streams = scope.run(() => {
     const map = {} as Record<A, StreamOp>
@@ -40,6 +40,7 @@ export function createOperationGroup<A extends string>(config: OperationGroupCon
   const active = useActiveOperations()
   active.ensurePrimed().then(() => {
     for (const op of store.forTarget(config.project, config.target)) {
+      if (!config.actions.includes(op.action as A)) continue
       const stream = streams[op.action as A]
       if (!stream || stream.running.value) continue
       void stream.attach(op.id)

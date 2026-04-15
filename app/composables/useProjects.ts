@@ -24,11 +24,8 @@ async function fetchProjects() {
     )
 
     names.forEach((name, i) => {
-      const result = settled[i] as PromiseSettledResult<{
-        name: string
-        status: ProjectEntry['status']
-      }>
-      if (result.status === 'fulfilled') {
+      const result = settled[i]
+      if (result?.status === 'fulfilled') {
         statusStore.upsert(name, {
           status: result.value.status,
           loading: false,
@@ -37,7 +34,7 @@ async function fetchProjects() {
         })
       } else {
         statusStore.upsert(name, {
-          error: parseOreError(result.reason, 'Failed to fetch status'),
+          error: parseOreError(result?.reason, 'Failed to fetch status'),
           loading: false,
         })
       }

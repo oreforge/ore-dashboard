@@ -12,25 +12,21 @@ function emptyEntry(): ProjectStatusEntry {
   return { status: null, loading: true, error: null, fetchedAt: 0 }
 }
 
-interface ProjectStatusState {
-  entries: Record<string, ProjectStatusEntry>
-}
+export const useProjectStatusStore = defineStore('projectStatus', () => {
+  const entries = ref<Record<string, ProjectStatusEntry>>({})
 
-export const useProjectStatusStore = defineStore('projectStatus', {
-  state: (): ProjectStatusState => ({ entries: {} }),
-  getters: {
-    get:
-      (state) =>
-      (name: string): ProjectStatusEntry =>
-        state.entries[name] ?? emptyEntry(),
-  },
-  actions: {
-    upsert(name: string, patch: Partial<ProjectStatusEntry>) {
-      const current = this.entries[name] ?? emptyEntry()
-      this.entries[name] = { ...current, ...patch }
-    },
-    remove(name: string) {
-      delete this.entries[name]
-    },
-  },
+  function get(name: string): ProjectStatusEntry {
+    return entries.value[name] ?? emptyEntry()
+  }
+
+  function upsert(name: string, patch: Partial<ProjectStatusEntry>) {
+    const current = entries.value[name] ?? emptyEntry()
+    entries.value[name] = { ...current, ...patch }
+  }
+
+  function remove(name: string) {
+    delete entries.value[name]
+  }
+
+  return { entries, get, upsert, remove }
 })
