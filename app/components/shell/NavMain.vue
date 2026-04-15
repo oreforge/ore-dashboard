@@ -1,5 +1,11 @@
 <script setup lang="ts">
-import { GaugeIcon, SettingsIcon, TerminalSquareIcon } from 'lucide-vue-next'
+import {
+  ArchiveIcon,
+  DatabaseIcon,
+  GaugeIcon,
+  SettingsIcon,
+  TerminalSquareIcon,
+} from 'lucide-vue-next'
 
 const route = useRoute()
 const projectName = computed(() => route.params.name as string | undefined)
@@ -8,6 +14,8 @@ const hasProject = computed(() => !!projectName.value)
 
 const navItems = [
   { label: 'Overview', icon: GaugeIcon, path: '' },
+  { label: 'Volumes', icon: DatabaseIcon, path: '/volumes' },
+  { label: 'Backups', icon: ArchiveIcon, path: '/backups' },
   { label: 'Console', icon: TerminalSquareIcon, path: '/console' },
   { label: 'Settings', icon: SettingsIcon, path: '/settings' },
 ]
@@ -17,7 +25,8 @@ function resolveTo(path: string) {
 }
 
 function isActive(path: string) {
-  return route.path === resolveTo(path)
+  if (path === '') return route.path === resolveTo('')
+  return route.path === resolveTo(path) || route.path.startsWith(`${resolveTo(path)}/`)
 }
 </script>
 
