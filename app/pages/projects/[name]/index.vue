@@ -135,7 +135,7 @@ const serverColCount = computed(() => serverColumns.length)
           <EmptyDescription>Start the project to bring up your servers.</EmptyDescription>
         </EmptyHeader>
         <EmptyContent>
-          <Button variant="outline" :disabled="ops.anyRunning.value" @click="ops.handleUp()">
+          <Button variant="outline" :disabled="ops.anyRunning" @click="ops.handleUp()">
             <PlayIcon class="mr-1.5 size-4" />
             Start project
           </Button>

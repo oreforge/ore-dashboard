@@ -1,51 +1,43 @@
 import type { OperationAction, OperationResponse } from '@oreforge/sdk'
-import { toast } from 'vue-sonner'
-import { useActiveOperations } from '~/composables/useActiveOperations'
 import { useOperationStream } from '~/composables/useOperationStream'
 import { useOperationsStore } from '~/stores/operations'
 
 type StreamOp = ReturnType<typeof useOperationStream>
 
 export interface OperationGroupConfig<A extends OperationAction> {
-  actions: readonly A[]
   labels: Record<A, string>
-  project: string
-  target?: string
-  trigger: (action: A, signal: AbortSignal, args?: unknown) => Promise<OperationResponse>
+  project: MaybeRefOrGetter<string>
+  target?: MaybeRefOrGetter<string | undefined>
+  trigger: (action: A, args?: unknown) => Promise<OperationResponse>
 }
 
-export function createOperationGroup<A extends OperationAction>(config: OperationGroupConfig<A>) {
-  const scope = effectScope(true)
-  const streams = scope.run(() => {
-    const map = {} as Record<A, StreamOp>
-    for (const action of config.actions) map[action] = useOperationStream()
-    return map
-  }) as Record<A, StreamOp>
+export interface OperationGroup<A extends OperationAction> {
+  streams: Record<A, StreamOp>
+  anyRunning: ComputedRef<boolean>
+  handle: (action: A, args?: unknown) => Promise<void>
+}
 
-  const anyRunning = computed(() => config.actions.some((action) => streams[action].running.value))
-
-  async function handle(action: A, args?: unknown): Promise<void> {
-    const stream = streams[action]
-    if (!stream) return
-    await stream.execute((signal) => config.trigger(action, signal, args))
-    const label = config.labels[action]
-    if (stream.error.value) {
-      toast.error(`${label} failed`, { description: stream.error.value })
-    } else {
-      toast.success(`${label} completed`)
-    }
+export function createOperationGroup<A extends OperationAction>(
+  config: OperationGroupConfig<A>,
+): OperationGroup<A> {
+  const streams = {} as Record<A, StreamOp>
+  for (const action of Object.keys(config.labels) as A[]) {
+    streams[action] = useOperationStream({
+      project: config.project,
+      target: config.target,
+      action,
+      label: config.labels[action],
+    })
   }
 
   const store = useOperationsStore()
-  const active = useActiveOperations()
-  active.ensurePrimed().then(() => {
-    for (const op of store.forTarget(config.project, config.target)) {
-      if (!config.actions.includes(op.action as A)) continue
-      const stream = streams[op.action as A]
-      if (!stream || stream.running.value) continue
-      void stream.attach(op.id)
-    }
-  })
+  const anyRunning = computed(() =>
+    store.anyRunning(toValue(config.project), toValue(config.target)),
+  )
 
-  return { streams, anyRunning, handle, dispose: () => scope.stop() }
+  async function handle(action: A, args?: unknown): Promise<void> {
+    await streams[action].trigger(() => config.trigger(action, args))
+  }
+
+  return { streams, anyRunning, handle }
 }

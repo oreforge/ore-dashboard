@@ -11,82 +11,47 @@ const LABELS: Record<Action, string> = {
   clean: 'Clean',
 }
 
-function createGroup(projectName: string) {
+export function useProjectOperations(projectName: MaybeRefOrGetter<string>) {
   const client = useOreClient()
 
-  return createOperationGroup<Action>({
-    actions: ['up', 'down', 'build', 'update', 'clean'],
+  const group = createOperationGroup<Action>({
     labels: LABELS,
     project: projectName,
-    trigger: (action, signal, args): Promise<OperationResponse> => {
-      const project = client.projects.get(projectName)
+    trigger: (action, args): Promise<OperationResponse> => {
+      const name = toValue(projectName)
+      const project = client.projects.get(name)
       switch (action) {
         case 'up': {
           const opts = (args ?? {}) as UpRequest
-          return project.up({ no_cache: opts.no_cache, force: opts.force }, { signal })
+          return project.up({ no_cache: opts.no_cache, force: opts.force })
         }
         case 'down':
-          return project.down({ signal })
+          return project.down()
         case 'build': {
           const opts = (args ?? {}) as BuildRequest
-          return project.build({ no_cache: opts.no_cache }, { signal })
+          return project.build({ no_cache: opts.no_cache })
         }
         case 'update':
-          return client.projects.update(projectName, { signal })
+          return client.projects.update(name)
         case 'clean': {
           const target = (args as CleanRequest['target']) ?? 'all'
-          return project.clean({ target }, { signal })
+          return project.clean({ target })
         }
       }
     },
   })
-}
 
-type Group = ReturnType<typeof createGroup>
-
-function makeStreamProxy(getStream: () => Group['streams'][Action]) {
-  return {
-    get running() {
-      return getStream().running
-    },
-    get error() {
-      return getStream().error
-    },
-    get operationId() {
-      return getStream().operationId
-    },
-    execute: (...args: Parameters<Group['streams'][Action]['execute']>) =>
-      getStream().execute(...args),
-    attach: (id: string) => getStream().attach(id),
-    cancel: () => getStream().cancel(),
-  }
-}
-
-export function useProjectOperations(projectName: MaybeRefOrGetter<string>) {
-  const name = computed(() => toValue(projectName))
-  const groupRef = shallowRef(createGroup(name.value))
-
-  watch(name, (next, prev) => {
-    if (next === prev) return
-    groupRef.value.dispose()
-    groupRef.value = createGroup(next)
+  return reactive({
+    up: group.streams.up,
+    down: group.streams.down,
+    build: group.streams.build,
+    update: group.streams.update,
+    clean: group.streams.clean,
+    anyRunning: group.anyRunning,
+    handleUp: (opts?: UpRequest) => group.handle('up', opts),
+    handleDown: () => group.handle('down'),
+    handleBuild: (opts?: BuildRequest) => group.handle('build', opts),
+    handleUpdate: () => group.handle('update'),
+    handleClean: (target: CleanRequest['target'] = 'all') => group.handle('clean', target),
   })
-
-  onScopeDispose(() => groupRef.value.dispose())
-
-  const group = () => groupRef.value
-
-  return {
-    up: makeStreamProxy(() => group().streams.up),
-    down: makeStreamProxy(() => group().streams.down),
-    build: makeStreamProxy(() => group().streams.build),
-    update: makeStreamProxy(() => group().streams.update),
-    clean: makeStreamProxy(() => group().streams.clean),
-    anyRunning: computed(() => group().anyRunning.value),
-    handleUp: (opts?: UpRequest) => group().handle('up', opts),
-    handleDown: () => group().handle('down'),
-    handleBuild: (opts?: BuildRequest) => group().handle('build', opts),
-    handleUpdate: () => group().handle('update'),
-    handleClean: (target: CleanRequest['target'] = 'all') => group().handle('clean', target),
-  }
 }

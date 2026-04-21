@@ -15,7 +15,7 @@ const aggregateState = computed(() => getAggregateState(props.project.status))
 const aggregateClass = computed(() => aggregateStateClass(aggregateState.value))
 
 const ops = useProjectOperations(() => props.project.name)
-const busy = computed(() => ops.anyRunning.value)
+const busy = ops.anyRunning
 const { iconUrl: resolveIconUrl } = useProjectIcon()
 const iconUrl = computed(() => resolveIconUrl(props.project.name))
 const initials = computed(() => props.project.name.slice(0, 2).toUpperCase())
@@ -73,7 +73,7 @@ function handleDown(e: Event) {
                   :disabled="busy"
                   @click="handleUp"
                 >
-                  <Spinner v-if="ops.up.running.value" />
+                  <Spinner v-if="ops.up.running" />
                   <PlayIcon v-else class="size-3.5" />
                 </Button>
               </TooltipTrigger>
@@ -88,7 +88,7 @@ function handleDown(e: Event) {
                   :disabled="busy"
                   @click="handleDown"
                 >
-                  <Spinner v-if="ops.down.running.value" />
+                  <Spinner v-if="ops.down.running" />
                   <SquareIcon v-else class="size-3.5" />
                 </Button>
               </TooltipTrigger>

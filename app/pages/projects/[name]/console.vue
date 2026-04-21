@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import type { ServerStatus } from '@oreforge/sdk'
-import { TerminalIcon } from 'lucide-vue-next'
+import { TerminalIcon, TerminalSquareIcon } from 'lucide-vue-next'
 import type ConsoleTerminal from '~/components/console/ConsoleTerminal.vue'
 
 const route = useRoute()
@@ -35,7 +35,10 @@ watch(
 <template>
   <div class="flex min-h-0 flex-1 flex-col">
     <div class="mb-6 shrink-0">
-      <h1 class="text-2xl font-semibold tracking-tight">Console</h1>
+      <h1 class="flex items-center gap-2 text-2xl font-semibold tracking-tight">
+        <TerminalSquareIcon class="size-6 text-muted-foreground" />
+        Console
+      </h1>
       <p class="mt-0.5 text-sm text-muted-foreground">{{ name }}</p>
     </div>
 

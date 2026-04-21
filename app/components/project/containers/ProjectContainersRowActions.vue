@@ -11,10 +11,17 @@ const props = defineProps<{
 
 const ops =
   props.type === 'server'
-    ? useServerOperations(props.projectName, props.containerName)
-    : useServiceOperations(props.projectName, props.containerName)
+    ? useServerOperations(
+        () => props.projectName,
+        () => props.containerName,
+      )
+    : useServiceOperations(
+        () => props.projectName,
+        () => props.containerName,
+      )
 
 const isRunning = computed(() => props.containerState === 'running')
+const busy = ops.anyRunning
 </script>
 
 <template>
@@ -29,26 +36,26 @@ const isRunning = computed(() => props.containerState === 'running')
       <DropdownMenuLabel class="text-xs">Actions</DropdownMenuLabel>
       <DropdownMenuSeparator />
       <DropdownMenuItem
-        :disabled="isRunning || ops.anyRunning.value"
+        :disabled="isRunning || busy"
         @click="ops.handleStart()"
       >
-        <Spinner v-if="ops.start.running.value" class="mr-2" />
+        <Spinner v-if="ops.start.running" class="mr-2" />
         <PlayIcon v-else class="mr-2 size-4" />
         Start
       </DropdownMenuItem>
       <DropdownMenuItem
-        :disabled="!isRunning || ops.anyRunning.value"
+        :disabled="!isRunning || busy"
         @click="ops.handleStop()"
       >
-        <Spinner v-if="ops.stop.running.value" class="mr-2" />
+        <Spinner v-if="ops.stop.running" class="mr-2" />
         <SquareIcon v-else class="mr-2 size-4" />
         Stop
       </DropdownMenuItem>
       <DropdownMenuItem
-        :disabled="!isRunning || ops.anyRunning.value"
+        :disabled="!isRunning || busy"
         @click="ops.handleRestart()"
       >
-        <Spinner v-if="ops.restart.running.value" class="mr-2" />
+        <Spinner v-if="ops.restart.running" class="mr-2" />
         <RefreshCwIcon v-else class="mr-2 size-4" />
         Restart
       </DropdownMenuItem>

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { CopyIcon, WebhookIcon, WebhookOffIcon } from 'lucide-vue-next'
+import { CopyIcon, SettingsIcon, WebhookIcon, WebhookOffIcon } from 'lucide-vue-next'
 import { toast } from 'vue-sonner'
 
 const route = useRoute()
@@ -57,7 +57,10 @@ async function handleRemove() {
 <template>
   <div>
     <div class="mb-6">
-      <h1 class="text-2xl font-semibold tracking-tight">Settings</h1>
+      <h1 class="flex items-center gap-2 text-2xl font-semibold tracking-tight">
+        <SettingsIcon class="size-6 text-muted-foreground" />
+        Settings
+      </h1>
       <p class="mt-0.5 text-sm text-muted-foreground">{{ name }}</p>
     </div>
 
