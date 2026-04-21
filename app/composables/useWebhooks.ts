@@ -2,7 +2,7 @@ import { toast } from 'vue-sonner'
 import { useWebhooksStore } from '~/stores/webhooks'
 import { parseOreError } from '~/utils/parseOreError'
 
-export function useWebhooks(projectName: MaybeRef<string>) {
+export function useWebhooks(projectName: MaybeRefOrGetter<string>) {
   const store = useWebhooksStore()
   const client = useOreClient()
   const name = computed(() => toValue(projectName))

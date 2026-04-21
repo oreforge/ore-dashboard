@@ -12,7 +12,10 @@ function resolveColor(el: HTMLElement): string {
   return colorCtx.fillStyle
 }
 
-export function useConsole(projectName: MaybeRef<string>, serverName: MaybeRef<string>) {
+export function useConsole(
+  projectName: MaybeRefOrGetter<string>,
+  serverName: MaybeRefOrGetter<string>,
+) {
   const store = useConsoleStore()
   const terminalRef = ref<HTMLElement | null>(null)
 

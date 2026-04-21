@@ -8,7 +8,7 @@ import { parseOreError } from '~/utils/parseOreError'
 
 const lastErrorByProject = new Map<string, string | null>()
 
-export function useVolumes(name: MaybeRef<string>) {
+export function useVolumes(name: MaybeRefOrGetter<string>) {
   const store = useVolumesStore()
   const operationsStore = useOperationsStore()
   const client = useOreClient()

@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import type { ServerStatus } from '@oreforge/sdk'
 import { TerminalIcon } from 'lucide-vue-next'
+import type ConsoleTerminal from '~/components/console/ConsoleTerminal.vue'
 
 const route = useRoute()
 const name = computed(() => route.params.name as string)
@@ -22,8 +23,9 @@ const terminalRef = ref<InstanceType<typeof ConsoleTerminal> | null>(null)
 watch(
   allServers,
   (servers) => {
-    if (!selectedServer.value && servers.length > 0) {
-      selectedServer.value = servers[0].container.name
+    const first = servers[0]
+    if (!selectedServer.value && first) {
+      selectedServer.value = first.container.name
     }
   },
   { immediate: true },

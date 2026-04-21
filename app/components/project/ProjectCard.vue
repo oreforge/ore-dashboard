@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import { PlayIcon, SquareIcon } from 'lucide-vue-next'
-import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import type { ProjectEntry } from '~/types/project'
 import { aggregateStateClass, getAggregateState } from '~/utils/status-colors'
 

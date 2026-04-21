@@ -1,7 +1,10 @@
 <script setup lang="ts">
 import { ActivityIcon, HeartPulseIcon, NetworkIcon, PlayIcon, ServerIcon } from 'lucide-vue-next'
-import { createServerColumns, type ServerRow } from '~/components/project/server-columns'
-import { createServiceColumns, type ServiceRow } from '~/components/project/service-columns'
+import { createServerColumns, type ServerRow } from '~/components/project/containers/server-columns'
+import {
+  createServiceColumns,
+  type ServiceRow,
+} from '~/components/project/containers/service-columns'
 import { aggregateStateClass, getAggregateState } from '~/utils/status-colors'
 
 const route = useRoute()
@@ -151,7 +154,7 @@ const serverColCount = computed(() => serverColumns.length)
             :get-row-id="(row: ServerRow) => row.name"
           >
             <template #toolbar="{ table }">
-              <ProjectContainerTableToolbar :table="table" :project-name="name" type="server" />
+              <ProjectContainersTableToolbar :table="table" :project-name="name" type="server" />
             </template>
           </ProjectDataTable>
         </div>
@@ -167,7 +170,7 @@ const serverColCount = computed(() => serverColumns.length)
             :get-row-id="(row: ServiceRow) => row.name"
           >
             <template #toolbar="{ table }">
-              <ProjectContainerTableToolbar :table="table" :project-name="name" type="service" />
+              <ProjectContainersTableToolbar :table="table" :project-name="name" type="service" />
             </template>
           </ProjectDataTable>
         </div>

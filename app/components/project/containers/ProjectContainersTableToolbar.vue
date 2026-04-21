@@ -1,9 +1,9 @@
-<script setup lang="ts">
+<script setup lang="ts" generic="TRow extends { name: string }">
 import type { Table } from '@tanstack/vue-table'
 import { PlayIcon, RefreshCwIcon, SquareIcon } from 'lucide-vue-next'
 
 const props = defineProps<{
-  table: Table<Record<string, unknown>>
+  table: Table<TRow>
   projectName: string
   type: 'server' | 'service'
 }>()

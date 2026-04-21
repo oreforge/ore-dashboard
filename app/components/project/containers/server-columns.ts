@@ -2,10 +2,10 @@ import type { ContainerState, HealthState } from '@oreforge/sdk'
 import type { ColumnDef } from '@tanstack/vue-table'
 import type { Ref } from 'vue'
 import { h } from 'vue'
-import ContainerRowActions from '~/components/project/ContainerRowActions.vue'
-import HealthBadge from '~/components/project/HealthBadge.vue'
-import LiveUptime from '~/components/project/LiveUptime.vue'
-import StatusBadge from '~/components/project/StatusBadge.vue'
+import HealthBadge from '~/components/project/containers/ProjectContainersHealthBadge.vue'
+import LiveUptime from '~/components/project/containers/ProjectContainersLiveUptime.vue'
+import ContainerRowActions from '~/components/project/containers/ProjectContainersRowActions.vue'
+import StatusBadge from '~/components/project/containers/ProjectContainersStatusBadge.vue'
 import Checkbox from '~/components/ui/checkbox/Checkbox.vue'
 
 export interface ServerRow {
@@ -24,7 +24,7 @@ export interface ServerRow {
 }
 
 export function createServerColumns(
-  projectName: () => string,
+  projectName: MaybeRefOrGetter<string>,
   fetchedAt: Ref<number>,
 ): ColumnDef<ServerRow>[] {
   return [
@@ -136,7 +136,7 @@ export function createServerColumns(
           'div',
           { class: 'flex justify-end' },
           h(ContainerRowActions, {
-            projectName: projectName(),
+            projectName: toValue(projectName),
             containerName: row.original.name,
             containerState: row.original.container.state,
             type: 'server',

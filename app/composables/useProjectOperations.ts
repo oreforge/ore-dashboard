@@ -62,7 +62,7 @@ function makeStreamProxy(getStream: () => Group['streams'][Action]) {
   }
 }
 
-export function useProjectOperations(projectName: MaybeRef<string>) {
+export function useProjectOperations(projectName: MaybeRefOrGetter<string>) {
   const name = computed(() => toValue(projectName))
   const groupRef = shallowRef(createGroup(name.value))
 

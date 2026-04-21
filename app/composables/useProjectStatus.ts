@@ -6,7 +6,7 @@ import { parseOreError } from '~/utils/parseOreError'
 
 const lastErrorByProject = new Map<string, string | null>()
 
-export function useProjectStatus(name: MaybeRef<string>) {
+export function useProjectStatus(name: MaybeRefOrGetter<string>) {
   const store = useProjectStatusStore()
   const client = useOreClient()
   const projectName = computed(() => toValue(name))
