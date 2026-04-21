@@ -1,5 +1,12 @@
 <script setup lang="ts">
-import { ActivityIcon, HeartPulseIcon, NetworkIcon, PlayIcon, ServerIcon } from 'lucide-vue-next'
+import {
+  ActivityIcon,
+  GaugeIcon,
+  HeartPulseIcon,
+  NetworkIcon,
+  PlayIcon,
+  ServerIcon,
+} from 'lucide-vue-next'
 import { createServerColumns, type ServerRow } from '~/components/project/containers/server-columns'
 import {
   createServiceColumns,
@@ -33,32 +40,37 @@ const serverColCount = computed(() => serverColumns.length)
 
 <template>
   <div>
-    <div class="mb-6 flex flex-wrap items-start justify-between gap-4">
-      <div>
-        <template v-if="loading">
-          <Skeleton class="h-8 w-40" />
-          <Skeleton class="mt-0.5 h-5 w-24" />
-        </template>
-        <template v-else>
-          <div class="flex items-center gap-2.5">
-            <h1 class="text-2xl font-semibold tracking-tight">{{ name }}</h1>
-            <Badge
-              v-if="status && aggregateState !== 'unknown'"
-              variant="outline"
-              :class="aggregateStateClass(aggregateState)"
-              class="text-[11px] font-medium capitalize"
-            >
-              {{ aggregateState }}
-            </Badge>
-          </div>
-          <p v-if="status" class="mt-0.5 text-sm text-muted-foreground">{{ status.network }}</p>
-        </template>
+    <div class="mb-6 space-y-4">
+      <div class="flex items-start gap-3">
+        <div class="min-w-0 flex-1">
+          <template v-if="loading">
+            <Skeleton class="h-8 w-40" />
+            <Skeleton class="mt-0.5 h-5 w-24" />
+          </template>
+          <template v-else>
+            <div class="flex items-center gap-2.5">
+              <h1 class="flex items-center gap-2 truncate text-2xl font-semibold tracking-tight">
+                <GaugeIcon class="size-6 shrink-0 text-muted-foreground" />
+                {{ name }}
+              </h1>
+              <Badge
+                v-if="status && aggregateState !== 'unknown'"
+                variant="outline"
+                :class="aggregateStateClass(aggregateState)"
+                class="shrink-0 text-[11px] font-medium capitalize"
+              >
+                {{ aggregateState }}
+              </Badge>
+            </div>
+            <p v-if="status" class="mt-0.5 truncate text-sm text-muted-foreground">{{ status.network }}</p>
+          </template>
+        </div>
+        <div class="flex shrink-0 items-center gap-1">
+          <LastUpdated v-if="fetchedAt" :fetched-at="fetchedAt" />
+          <RefreshButton :refresh="refreshStatus" />
+        </div>
       </div>
-      <div class="flex items-center gap-3">
-        <LastUpdated v-if="fetchedAt" :fetched-at="fetchedAt" />
-        <RefreshButton :refresh="refreshStatus" />
-        <ProjectActionBar v-if="!loading" :project-name="name" />
-      </div>
+      <ProjectActionBar v-if="!loading" :project-name="name" />
     </div>
 
     <div v-if="loading" class="space-y-6">

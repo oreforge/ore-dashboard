@@ -24,7 +24,7 @@ function bulkAction(action: 'handleStart' | 'handleStop' | 'handleRestart') {
 </script>
 
 <template>
-  <div class="flex items-center pb-4">
+  <div class="flex items-center gap-2 pb-4">
     <Input
       class="max-w-sm"
       :placeholder="`Filter ${type}s...`"
@@ -32,7 +32,7 @@ function bulkAction(action: 'handleStart' | 'handleStop' | 'handleRestart') {
       @update:model-value="table.getColumn('name')?.setFilterValue($event)"
     />
     <div v-if="hasSelection" class="ml-auto flex items-center gap-2">
-      <span class="text-sm text-muted-foreground">
+      <span class="whitespace-nowrap text-sm text-muted-foreground">
         {{ selectedRows.length }} of {{ table.getFilteredRowModel().rows.length }} selected
       </span>
       <Separator orientation="vertical" class="h-6" />

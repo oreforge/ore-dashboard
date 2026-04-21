@@ -42,7 +42,7 @@ const breadcrumbs = computed(() => {
           <OperationsIndicator />
         </div>
       </header>
-      <main class="flex min-h-0 flex-1 flex-col p-6">
+      <main class="flex min-h-0 min-w-0 flex-1 flex-col p-6">
         <slot />
       </main>
     </SidebarInset>

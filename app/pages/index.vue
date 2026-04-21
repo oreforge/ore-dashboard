@@ -9,21 +9,23 @@ const showAddDialog = ref(false)
 
 <template>
   <div>
-    <div class="mb-8 flex items-center justify-between">
-      <div>
-        <h1 class="text-2xl font-semibold tracking-tight">Projects</h1>
-        <p class="mt-1 text-sm text-muted-foreground">
-          Manage your game server networks.
-        </p>
+    <div class="mb-8 space-y-4">
+      <div class="flex items-start gap-3">
+        <div class="min-w-0 flex-1">
+          <h1 class="text-2xl font-semibold tracking-tight">Projects</h1>
+          <p class="mt-1 text-sm text-muted-foreground">
+            Manage your game server networks.
+          </p>
+        </div>
+        <div class="flex shrink-0 items-center gap-1">
+          <LastUpdated v-if="fetchedAt" :fetched-at="fetchedAt" />
+          <RefreshButton :refresh="refresh" />
+        </div>
       </div>
-      <div class="flex items-center gap-3">
-        <LastUpdated v-if="fetchedAt" :fetched-at="fetchedAt" />
-        <RefreshButton :refresh="refresh" />
-        <Button @click="showAddDialog = true">
-          <PlusIcon class="mr-1.5 size-4" />
-          Add Project
-        </Button>
-      </div>
+      <Button @click="showAddDialog = true">
+        <PlusIcon class="mr-1.5 size-4" />
+        Add Project
+      </Button>
     </div>
 
     <div v-if="loading" class="grid gap-4 md:grid-cols-2 lg:grid-cols-3">

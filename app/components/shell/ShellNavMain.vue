@@ -1,5 +1,11 @@
 <script setup lang="ts">
-import { DatabaseIcon, GaugeIcon, SettingsIcon, TerminalSquareIcon } from 'lucide-vue-next'
+import {
+  DatabaseIcon,
+  GaugeIcon,
+  HammerIcon,
+  SettingsIcon,
+  TerminalSquareIcon,
+} from 'lucide-vue-next'
 
 const route = useRoute()
 const projectName = computed(() => route.params.name as string | undefined)
@@ -9,6 +15,7 @@ const hasProject = computed(() => !!projectName.value)
 const navItems = [
   { label: 'Overview', icon: GaugeIcon, path: '' },
   { label: 'Volumes', icon: DatabaseIcon, path: '/volumes' },
+  { label: 'Builds', icon: HammerIcon, path: '/builds' },
   { label: 'Console', icon: TerminalSquareIcon, path: '/console' },
   { label: 'Settings', icon: SettingsIcon, path: '/settings' },
 ]

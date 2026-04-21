@@ -4,6 +4,7 @@ import { h } from 'vue'
 import VolumeRowActions from '~/components/project/volumes/ProjectVolumesRowActions.vue'
 import Badge from '~/components/ui/badge/Badge.vue'
 import Checkbox from '~/components/ui/checkbox/Checkbox.vue'
+import { formatBytes } from '~/utils/formatters'
 
 function ownerBadgeClass(kind: 'server' | 'service') {
   return kind === 'server'
@@ -46,55 +47,63 @@ export function createVolumeColumns(
       enableHiding: false,
     },
     {
-      accessorKey: 'name',
-      header: 'Name',
-      cell: ({ row }) => h('span', { class: 'font-mono text-xs' }, row.getValue('name') as string),
-    },
-    {
       accessorKey: 'logical',
-      header: 'Logical',
-      cell: ({ row }) => h('span', { class: 'text-sm' }, row.getValue('logical') as string),
-    },
-    {
-      id: 'owner',
-      header: 'Owner',
-      accessorFn: (row) => row.owner,
+      header: 'Name',
       cell: ({ row }) =>
-        h('div', { class: 'flex items-center gap-2' }, [
+        h('div', { class: 'flex min-w-0 flex-col pr-4' }, [
+          h('span', { class: 'truncate text-sm font-medium' }, row.original.logical),
           h(
-            Badge,
-            {
-              variant: 'outline',
-              class: `text-[11px] ${ownerBadgeClass(row.original.ownerKind)}`,
-            },
-            () => row.original.ownerKind,
+            'span',
+            { class: 'truncate font-mono text-[11px] text-muted-foreground' },
+            row.original.name,
           ),
-          h('span', { class: 'text-sm' }, row.original.owner),
         ]),
     },
     {
-      accessorKey: 'driver',
-      header: 'Driver',
-      size: 100,
-      cell: ({ row }) =>
-        h('span', { class: 'text-sm text-muted-foreground' }, row.getValue('driver') as string),
+      id: 'usedBy',
+      header: 'Used by',
+      accessorFn: (row) => [row.owner, ...row.inUseBy].join(', '),
+      cell: ({ row }) => {
+        const { owner, ownerKind, inUseBy } = row.original
+        const consumers = Array.from(new Set([owner, ...inUseBy]))
+        return h(
+          'div',
+          { class: 'flex min-w-0 flex-wrap items-center gap-1.5 pr-4' },
+          consumers.map((name) => {
+            const isOwner = name === owner
+            return h(
+              Badge,
+              {
+                variant: 'outline',
+                title: isOwner ? `owner (${ownerKind})` : 'mounted',
+                class: [
+                  'text-[11px]',
+                  isOwner
+                    ? ownerBadgeClass(ownerKind)
+                    : 'border-muted-foreground/20 text-muted-foreground',
+                ],
+              },
+              () => name,
+            )
+          }),
+        )
+      },
     },
     {
-      id: 'inUseBy',
-      header: 'In use by',
-      accessorFn: (row) => row.inUseBy.join(', '),
-      cell: ({ row }) => {
-        const list = row.original.inUseBy
-        if (list.length === 0) {
-          return h('span', { class: 'text-sm text-muted-foreground' }, '—')
-        }
-        return h('span', { class: 'truncate text-sm' }, list.join(', '))
-      },
+      accessorKey: 'sizeBytes',
+      header: 'Size',
+      size: 120,
+      cell: ({ row }) =>
+        h(
+          'span',
+          { class: 'font-mono text-xs tabular-nums text-muted-foreground' },
+          formatBytes(row.original.sizeBytes),
+        ),
     },
     {
       id: 'createdAt',
       header: 'Created',
-      size: 180,
+      size: 190,
       accessorFn: (row) => row.createdAt ?? '',
       cell: ({ row }) =>
         h(
@@ -105,7 +114,7 @@ export function createVolumeColumns(
     },
     {
       id: 'actions',
-      size: 48,
+      size: 56,
       enableHiding: false,
       cell: ({ row }) =>
         h(

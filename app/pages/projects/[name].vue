@@ -13,5 +13,5 @@ provide<ProjectStatusContext>('projectStatus', { status, loading, error, fetched
 </script>
 
 <template>
-  <NuxtPage class="flex min-h-0 flex-1 flex-col" />
+  <NuxtPage class="flex min-h-0 min-w-0 flex-1 flex-col" />
 </template>

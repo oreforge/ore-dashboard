@@ -3,3 +3,4 @@ export const PROJECT_STATUS_INTERVAL = 3000
 export const NOW_INTERVAL = 1000
 export const OPERATIONS_INTERVAL = 5000
 export const VOLUMES_INTERVAL = 5000
+export const BUILDS_INTERVAL = 10000
