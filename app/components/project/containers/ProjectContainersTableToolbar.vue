@@ -10,16 +10,26 @@ const props = defineProps<{
 
 const selectedRows = computed(() => props.table.getFilteredSelectedRowModel().rows)
 const hasSelection = computed(() => selectedRows.value.length > 0)
+const selectedNames = computed(() => selectedRows.value.map((r) => r.original.name))
 
-function bulkAction(action: 'handleStart' | 'handleStop' | 'handleRestart') {
-  for (const row of selectedRows.value) {
-    const ops =
-      props.type === 'server'
-        ? useServerOperations(props.projectName, row.original.name)
-        : useServiceOperations(props.projectName, row.original.name)
-    ops[action]()
-  }
+const batch = useBatchContainerOperations(() => props.projectName, props.type)
+
+async function handleStart() {
+  const names = selectedNames.value
   props.table.toggleAllPageRowsSelected(false)
+  await batch.handleStart(names)
+}
+
+async function handleStop() {
+  const names = selectedNames.value
+  props.table.toggleAllPageRowsSelected(false)
+  await batch.handleStop(names)
+}
+
+async function handleRestart() {
+  const names = selectedNames.value
+  props.table.toggleAllPageRowsSelected(false)
+  await batch.handleRestart(names)
 }
 </script>
 
@@ -36,16 +46,19 @@ function bulkAction(action: 'handleStart' | 'handleStop' | 'handleRestart') {
         {{ selectedRows.length }} of {{ table.getFilteredRowModel().rows.length }} selected
       </span>
       <Separator orientation="vertical" class="h-6" />
-      <Button variant="outline" @click="bulkAction('handleStart')">
-        <PlayIcon class="mr-1.5 size-4" />
+      <Button variant="outline" :disabled="batch.start.running" @click="handleStart">
+        <Spinner v-if="batch.start.running" class="mr-1.5" />
+        <PlayIcon v-else class="mr-1.5 size-4" />
         Start
       </Button>
-      <Button variant="outline" @click="bulkAction('handleStop')">
-        <SquareIcon class="mr-1.5 size-4" />
+      <Button variant="outline" :disabled="batch.stop.running" @click="handleStop">
+        <Spinner v-if="batch.stop.running" class="mr-1.5" />
+        <SquareIcon v-else class="mr-1.5 size-4" />
         Stop
       </Button>
-      <Button variant="outline" @click="bulkAction('handleRestart')">
-        <RefreshCwIcon class="mr-1.5 size-4" />
+      <Button variant="outline" :disabled="batch.restart.running" @click="handleRestart">
+        <Spinner v-if="batch.restart.running" class="mr-1.5" />
+        <RefreshCwIcon v-else class="mr-1.5 size-4" />
         Restart
       </Button>
     </div>

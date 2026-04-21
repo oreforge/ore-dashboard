@@ -46,6 +46,10 @@ export const useOperationsStore = defineStore('operations', () => {
     )
   }
 
+  function isActionRunning(project: string, action: OperationAction): boolean {
+    return list.value.some((op) => op.project === project && op.action === action && isActive(op))
+  }
+
   return {
     entries,
     primed,
@@ -56,5 +60,6 @@ export const useOperationsStore = defineStore('operations', () => {
     setPrimed,
     isRunning,
     anyRunning,
+    isActionRunning,
   }
 })

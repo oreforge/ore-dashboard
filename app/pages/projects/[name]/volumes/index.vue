@@ -9,6 +9,7 @@ const name = computed(() => route.params.name as string)
 useHead({ title: () => `Volumes · ${name.value}` })
 
 const { volumes, loading, error, fetchedAt, refresh, remove } = useVolumes(name)
+const batchVolumes = useBatchVolumeOperations(name)
 
 const deleteTargets = ref<VolumeResponse[]>([])
 const deleteForce = ref(false)
@@ -36,11 +37,21 @@ function closeDelete() {
 async function confirmDelete() {
   if (deleteTargets.value.length === 0) return
   deleteBusy.value = true
-  const results = await Promise.all(
-    deleteTargets.value.map((v) => remove(v.name, deleteForce.value)),
-  )
-  deleteBusy.value = false
-  if (results.every(Boolean)) closeDelete()
+  try {
+    if (deleteTargets.value.length === 1) {
+      const target = deleteTargets.value[0]
+      if (!target) return
+      const ok = await remove(target.name, deleteForce.value)
+      if (ok) closeDelete()
+      return
+    }
+    const names = deleteTargets.value.map((v) => v.name)
+    await batchVolumes.handleDelete(names, deleteForce.value)
+    closeDelete()
+    await refresh()
+  } finally {
+    deleteBusy.value = false
+  }
 }
 
 const columns = createVolumeColumns(askDelete)
